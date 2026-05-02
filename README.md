@@ -139,15 +139,20 @@ Providers are auto-detected by default. To choose providers explicitly:
 Customize these settings in `opencode-quota/quota-toast.json`.
 
 <details>
-<summary>Example customizations</summary>
+<summary>Show every quota window</summary>
 
-Show every quota window instead of the default most-constrained window:
+Instead of the default most-constrained window:
 
 ```jsonc
 {
   "formatStyle": "allWindows",
 }
 ```
+
+</details>
+
+<details>
+<summary>Choose OpenCode Go windows</summary>
 
 Choose which OpenCode Go windows to display:
 
@@ -157,6 +162,11 @@ Choose which OpenCode Go windows to display:
 }
 ```
 
+</details>
+
+<details>
+<summary>Show used percentages</summary>
+
 Show percentages as used instead of remaining in toasts and the sidebar:
 
 ```jsonc
@@ -165,7 +175,12 @@ Show percentages as used instead of remaining in toasts and the sidebar:
 }
 ```
 
-Turn off popup toasts while keeping `/quota` and the sidebar:
+</details>
+
+<details>
+<summary>Turn off popup toasts</summary>
+
+Keep `/quota` and the sidebar enabled:
 
 ```jsonc
 {
@@ -173,7 +188,12 @@ Turn off popup toasts while keeping `/quota` and the sidebar:
 }
 ```
 
-Increase the remote provider request timeout from the default 5000ms (providers with custom defaults, such as Gemini CLI and OpenCode Go, keep their provider default unless you set this):
+</details>
+
+<details>
+<summary>Increase request timeout</summary>
+
+Increase the remote provider request timeout from the default 5000ms. Providers with custom defaults, such as Gemini CLI and OpenCode Go, keep their provider default unless you set this.
 
 ```jsonc
 {
