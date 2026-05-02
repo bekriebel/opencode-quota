@@ -74,9 +74,7 @@ If you also want the sidebar, add the same package to the `tui.json` or `tui.jso
 Quota settings go in `opencode-quota/quota-toast.json` next to the OpenCode config file you chose during install. Existing `experimental.quotaToast` settings still work when no sidecar file exists. Quota settings do not live in `tui.json`.
 
 <details>
-<summary>Full configuration reference</summary>
-
-Quota plugin settings go in `opencode-quota/quota-toast.json` next to the OpenCode config file you chose during install. Existing `experimental.quotaToast` settings in `opencode.json` / `opencode.jsonc` still work when no sidecar file exists. Quota settings do not live in `tui.json`.
+<summary><em>Full configuration reference</em></summary>
 
 #### Core/shared settings
 
@@ -178,8 +176,6 @@ If you want the `Quota` sidebar panel, you need the plugin in both OpenCode conf
 | NanoGPT                 | Usually automatic  | Existing OpenCode auth, global config, or env             | Remote API               |
 | OpenCode Go             | [Needs quick setup](#opencode-go-quick-setup) | Set workspace ID and `auth` cookie                        | Dashboard scraping       |
 
-For companion providers, put the auth plugin first and `@slkiser/opencode-quota` second.
-
 Providers are auto-detected by default. To choose providers explicitly, set `enabledProviders` in `opencode-quota/quota-toast.json`:
 
 ```jsonc
@@ -193,7 +189,7 @@ Providers are auto-detected by default. To choose providers explicitly, set `ena
 Customize these settings in `opencode-quota/quota-toast.json`.
 
 <details>
-<summary>Show every quota window</summary>
+<summary><em>Show every quota window</em></summary>
 
 Instead of the default most-constrained window:
 
@@ -206,7 +202,7 @@ Instead of the default most-constrained window:
 </details>
 
 <details>
-<summary>Choose OpenCode Go windows</summary>
+<summary><em>Choose OpenCode Go windows</em></summary>
 
 Choose which OpenCode Go windows to display:
 
@@ -219,7 +215,7 @@ Choose which OpenCode Go windows to display:
 </details>
 
 <details>
-<summary>Show used percentages</summary>
+<summary><em>Show used percentages</em></summary>
 
 Show percentages as used instead of remaining in toasts and the sidebar:
 
@@ -232,7 +228,7 @@ Show percentages as used instead of remaining in toasts and the sidebar:
 </details>
 
 <details>
-<summary>Turn off popup toasts</summary>
+<summary><em>Turn off popup toasts</em></summary>
 
 Keep `/quota` and the sidebar enabled:
 
@@ -245,7 +241,7 @@ Keep `/quota` and the sidebar enabled:
 </details>
 
 <details>
-<summary>Increase request timeout</summary>
+<summary><em>Increase request timeout</em></summary>
 
 Increase the remote provider request timeout from the default 5000ms. Providers with custom defaults, such as Gemini CLI and OpenCode Go, keep their provider default unless you set this.
 
@@ -258,7 +254,7 @@ Increase the remote provider request timeout from the default 5000ms. Providers 
 </details>
 
 <details>
-<summary>Advanced: legacy config sync</summary>
+<summary><em>Advanced: legacy config sync</em></summary>
 
 By default, the installer writes quota settings only to `opencode-quota/quota-toast.json`. If you also want it to write the legacy OpenCode block, run:
 
@@ -410,8 +406,10 @@ If quota or token data looks wrong:
 
 ### Provider Troubleshooting
 
+For companion providers, confirm the auth plugin appears before `@slkiser/opencode-quota` in `opencode.json`.
+
 <details>
-<summary><strong>Anthropic (Claude)</strong></summary>
+<summary><em>Anthropic (Claude)</em></summary>
 
 Run `/quota_status` and check the Anthropic section.
 
@@ -426,7 +424,7 @@ Run `/quota_status` and check the Anthropic section.
 </details>
 
 <details>
-<summary><strong>GitHub Copilot</strong></summary>
+<summary><em>GitHub Copilot</em></summary>
 
 Run `/quota_status` and check `copilot_quota_auth`, `billing_mode`, `billing_scope`, and `quota_api`.
 
@@ -440,7 +438,7 @@ Run `/quota_status` and check `copilot_quota_auth`, `billing_mode`, `billing_sco
 </details>
 
 <details>
-<summary><strong>OpenAI</strong></summary>
+<summary><em>OpenAI</em></summary>
 
 Run `/quota_status` and check the OpenAI auth source and token status.
 
@@ -453,7 +451,7 @@ Run `/quota_status` and check the OpenAI auth source and token status.
 </details>
 
 <details>
-<summary><strong>Cursor</strong></summary>
+<summary><em>Cursor</em></summary>
 
 Run `/quota_status` and check the Cursor section.
 
@@ -468,7 +466,7 @@ Run `/quota_status` and check the Cursor section.
 </details>
 
 <details>
-<summary><strong>Qwen Code</strong></summary>
+<summary><em>Qwen Code</em></summary>
 
 Run `/quota_status` and check `qwen_oauth_source`, `qwen_local_plan`, and the `qwen_code` live probe section.
 
@@ -482,7 +480,7 @@ Run `/quota_status` and check `qwen_oauth_source`, `qwen_local_plan`, and the `q
 </details>
 
 <details>
-<summary><strong>Alibaba Coding Plan</strong></summary>
+<summary><em>Alibaba Coding Plan</em></summary>
 
 Run `/quota_status` and check the Alibaba auth, resolved tier, state-file path, and `alibaba_coding_plan` live probe section.
 
@@ -496,7 +494,7 @@ Run `/quota_status` and check the Alibaba auth, resolved tier, state-file path, 
 </details>
 
 <details>
-<summary><strong>MiniMax, Kimi, Chutes AI, Synthetic, Z.ai, and NanoGPT</strong></summary>
+<summary><em>MiniMax, Kimi, Chutes AI, Synthetic, Z.ai, and NanoGPT</em></summary>
 
 These providers use trusted env vars, trusted user/global OpenCode config, or native OpenCode auth. Run `/quota_status` and check the provider-specific API-key diagnostics.
 
@@ -514,7 +512,7 @@ For security, repo-local `opencode.json` / `opencode.jsonc` is ignored for provi
 </details>
 
 <details>
-<summary><strong>Google Antigravity</strong></summary>
+<summary><em>Google Antigravity</em></summary>
 
 Run `/quota_status` and check the `google_antigravity` section.
 
@@ -528,7 +526,7 @@ Run `/quota_status` and check the `google_antigravity` section.
 </details>
 
 <details>
-<summary><strong>Gemini CLI</strong></summary>
+<summary><em>Gemini CLI</em></summary>
 
 Run `/quota_status` and check the Gemini CLI live probe rows.
 
@@ -542,7 +540,7 @@ Run `/quota_status` and check the Gemini CLI live probe rows.
 </details>
 
 <details>
-<summary><strong>OpenCode Go</strong></summary>
+<summary><em>OpenCode Go</em></summary>
 
 Run `/quota_status` and check the `opencode_go` section.
 
@@ -557,7 +555,7 @@ Run `/quota_status` and check the `opencode_go` section.
 </details>
 
 <details>
-<summary><strong>Token Reports</strong></summary>
+<summary><em>Token Reports</em></summary>
 
 Run `/quota_status` and check pricing snapshot health plus OpenCode database paths.
 
