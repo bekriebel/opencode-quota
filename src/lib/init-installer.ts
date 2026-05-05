@@ -1003,12 +1003,12 @@ async function promptForSelections(
     message: "Quota reset periods",
     options: [
       {
-        label: "One reset period per provider (single window; best for quick quota checks)",
-        value: "singleWindow",
-      },
-      {
         label: "All reset periods per provider (all windows; compare every tracked reset period)",
         value: "allWindows",
+      },
+      {
+        label: "One reset period per provider (single window; best for quick quota checks)",
+        value: "singleWindow",
       },
     ],
   });
