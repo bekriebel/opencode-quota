@@ -24,9 +24,13 @@ vi.mock("../src/lib/opencode-storage.js", () => {
 });
 
 vi.mock("../src/lib/modelsdev-pricing.js", () => ({
-  hasCost: vi.fn((providerID: string, modelID: string) => providerID === "openai" && modelID === "gpt-5"),
+  hasCost: vi.fn(
+    (providerID: string, modelID: string) => providerID === "openai" && modelID === "gpt-5",
+  ),
   hasProvider: vi.fn((providerID: string) => providerID === "openai"),
-  hasModel: vi.fn((providerID: string, modelID: string) => providerID === "openai" && modelID === "gpt-5"),
+  hasModel: vi.fn(
+    (providerID: string, modelID: string) => providerID === "openai" && modelID === "gpt-5",
+  ),
   isModelsDevProviderId: vi.fn((providerID: string) => providerID === "openai"),
   listProvidersForModelId: vi.fn((modelID: string) => (modelID === "gpt-5" ? ["openai"] : [])),
   lookupCost: vi.fn((providerID: string, modelID: string) =>
@@ -45,12 +49,25 @@ vi.mock("../src/lib/cursor-pricing.js", () => ({
 
 vi.mock("../src/lib/token-cost.js", () => ({
   calculateUsdFromTokenBuckets: vi.fn(
-    (_rates: unknown, tokens: { input: number; output: number; reasoning: number; cache_read: number; cache_write: number }) =>
-      tokens.input + tokens.output + tokens.reasoning + tokens.cache_read + tokens.cache_write,
+    (
+      _rates: unknown,
+      tokens: {
+        input: number;
+        output: number;
+        reasoning: number;
+        cache_read: number;
+        cache_write: number;
+      },
+    ) => tokens.input + tokens.output + tokens.reasoning + tokens.cache_read + tokens.cache_write,
   ),
 }));
 
-import { aggregateUsage, resolveSessionTree, SessionNotFoundError } from "../src/lib/quota-stats.js";
+import {
+  aggregateUsage,
+  getSessionTokenSummary,
+  resolveSessionTree,
+  SessionNotFoundError,
+} from "../src/lib/quota-stats.js";
 
 describe("quota stats session tree", () => {
   beforeEach(() => {
@@ -127,6 +144,51 @@ describe("quota stats session tree", () => {
     (storage.readAllSessionsIndex as any).mockResolvedValue({});
 
     await expect(resolveSessionTree("ses_missing")).rejects.toBeInstanceOf(SessionNotFoundError);
+  });
+});
+
+describe("session token summary", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns new and cached input token totals separately", async () => {
+    const storage = await import("../src/lib/opencode-storage.js");
+    (storage.iterAssistantMessagesForSession as any).mockResolvedValue([
+      {
+        sessionID: "ses_root",
+        role: "assistant",
+        providerID: "openai",
+        modelID: "gpt-5",
+        tokens: { input: 10, output: 5, reasoning: 0, cache: { read: 4, write: 0 } },
+      },
+      {
+        sessionID: "ses_root",
+        role: "assistant",
+        providerID: "openai",
+        modelID: "gpt-5",
+        tokens: { input: 2, output: 3, reasoning: 0, cache: { read: 6, write: 0 } },
+      },
+    ]);
+
+    const result = await getSessionTokenSummary("ses_root");
+
+    expect(result).toEqual({
+      sessionID: "ses_root",
+      totalInput: 12,
+      totalCachedInput: 10,
+      totalCombinedInput: 22,
+      totalOutput: 8,
+      models: [
+        {
+          modelID: "gpt-5",
+          input: 12,
+          cachedInput: 10,
+          totalInput: 22,
+          output: 8,
+        },
+      ],
+    });
   });
 });
 

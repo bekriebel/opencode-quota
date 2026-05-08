@@ -69,6 +69,8 @@ export interface QuotaToastError {
 export interface SessionTokenModel {
   modelID: string;
   input: number;
+  cachedInput?: number;
+  totalInput?: number;
   output: number;
 }
 
@@ -76,6 +78,8 @@ export interface SessionTokenModel {
 export interface SessionTokensData {
   models: SessionTokenModel[];
   totalInput: number;
+  totalCachedInput?: number;
+  totalCombinedInput?: number;
   totalOutput: number;
 }
 

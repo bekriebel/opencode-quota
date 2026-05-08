@@ -25,13 +25,26 @@ function clampRenderedLine(line: string, maxWidth?: number): string {
   return width === undefined ? line : line.slice(0, width);
 }
 
-function buildWideSessionTokenSectionModel(sessionTokens: SessionTokensData): SessionTokenSectionModel {
+function formatInputWithCache(input: number, cachedInput?: number): string {
+  const inputStr = formatTokenCount(input);
+  const cached = cachedInput ?? 0;
+  return cached > 0 ? `${inputStr} (${formatTokenCount(cached)})` : inputStr;
+}
+
+function formatInputCell(input: number, cachedInput?: number): string {
+  const value = formatInputWithCache(input, cachedInput);
+  return value.length > 6 ? value : padLeft(value, 6);
+}
+
+function buildWideSessionTokenSectionModel(
+  sessionTokens: SessionTokensData,
+): SessionTokenSectionModel {
   const lines: string[] = [];
   for (const model of sessionTokens.models) {
     const shortName = shortenModelName(model.modelID, 20);
-    const inStr = formatTokenCount(model.input);
+    const inStr = formatInputCell(model.input, model.cachedInput);
     const outStr = formatTokenCount(model.output);
-    lines.push(`  ${padRight(shortName, 20)}  ${padLeft(inStr, 6)} in  ${padLeft(outStr, 6)} out`);
+    lines.push(`  ${padRight(shortName, 20)}  ${inStr} in  ${padLeft(outStr, 6)} out`);
   }
 
   return {
@@ -51,7 +64,7 @@ function buildCompactSessionTokenSectionModel(
     const modelIndent = width > 2 ? "  " : "";
     const modelLineWidth = Math.max(1, width - modelIndent.length);
     const detailIndent = width > 4 ? "    " : width > 2 ? "  " : "";
-    const inStr = formatTokenCount(model.input);
+    const inStr = formatInputWithCache(model.input, model.cachedInput);
     const outStr = formatTokenCount(model.output);
     const compactCounts = `${inStr} in  ${outStr} out`;
 
@@ -76,7 +89,8 @@ function buildSidebarSessionTokenSummaryModel(
   sessionTokens: SessionTokensData,
   options?: { maxWidth?: number },
 ): SessionTokenSectionModel {
-  const summaryLine = `  ${formatTokenCount(sessionTokens.totalInput)} in  ${formatTokenCount(sessionTokens.totalOutput)} out`;
+  const totalCached = sessionTokens.totalCachedInput ?? 0;
+  const summaryLine = `  ${formatInputWithCache(sessionTokens.totalInput, totalCached)} in  ${formatTokenCount(sessionTokens.totalOutput)} out`;
   return {
     heading: clampRenderedLine(SESSION_TOKEN_SECTION_HEADING, options?.maxWidth),
     lines: [clampRenderedLine(summaryLine, options?.maxWidth)],
@@ -98,7 +112,12 @@ export function buildSessionTokenSectionModel(
     return buildCompactSessionTokenSectionModel(sessionTokens, maxWidth);
   }
 
-  return buildWideSessionTokenSectionModel(sessionTokens);
+  const wideSection = buildWideSessionTokenSectionModel(sessionTokens);
+  if (maxWidth !== undefined && wideSection.lines.some((line) => line.length > maxWidth)) {
+    return buildCompactSessionTokenSectionModel(sessionTokens, maxWidth);
+  }
+
+  return wideSection;
 }
 
 /**

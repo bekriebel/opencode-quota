@@ -469,6 +469,35 @@ describe("formatQuotaRows", () => {
     expect(out).not.toContain("openai/gpt-5.4-mini");
   });
 
+  it("renders single-window session tokens with new and cached input totals when available", () => {
+    const out = formatQuotaRows({
+      version: "1.0.0",
+      style: "singleWindow",
+      layout: { maxWidth: 80, narrowAt: 32, tinyAt: 20 },
+      entries: [],
+      sessionTokens: {
+        totalInput: 372,
+        totalCachedInput: 120,
+        totalCombinedInput: 492,
+        totalOutput: 41,
+        models: [
+          {
+            modelID: "openai/gpt-5.4-mini",
+            input: 372,
+            cachedInput: 120,
+            totalInput: 492,
+            output: 41,
+          },
+        ],
+      },
+    });
+
+    expect(out.split("\n")).toEqual([
+      SESSION_TOKEN_SECTION_HEADING,
+      "  372 (120) in  41 out",
+    ]);
+  });
+
   it("renders all-window session tokens with detailed per-model rows", () => {
     const out = formatQuotaRows({
       version: "1.0.0",
@@ -486,6 +515,35 @@ describe("formatQuotaRows", () => {
       SESSION_TOKEN_SECTION_HEADING,
       "  openai/gpt-5.4-mini",
       "    372 in  41 out",
+    ]);
+  });
+
+  it("renders all-window session tokens with separate new and cached input when available", () => {
+    const out = formatQuotaRows({
+      version: "1.0.0",
+      style: "allWindows",
+      layout: { maxWidth: 80, narrowAt: 32, tinyAt: 20 },
+      entries: [],
+      sessionTokens: {
+        totalInput: 372,
+        totalCachedInput: 120,
+        totalCombinedInput: 492,
+        totalOutput: 41,
+        models: [
+          {
+            modelID: "openai/gpt-5.4-mini",
+            input: 372,
+            cachedInput: 120,
+            totalInput: 492,
+            output: 41,
+          },
+        ],
+      },
+    });
+
+    expect(out.split("\n")).toEqual([
+      SESSION_TOKEN_SECTION_HEADING,
+      "  openai/gpt-5.4-mini   372 (120) in      41 out",
     ]);
   });
 

@@ -123,14 +123,16 @@ describe("buildCompactQuotaStatusLine", () => {
         ],
         errors: [],
         sessionTokens: {
-          models: [{ modelID: "openai/gpt-5", input: 12_400, output: 3_100 }],
+          models: [{ modelID: "openai/gpt-5", input: 12_400, cachedInput: 5_600, totalInput: 18_000, output: 3_100 }],
           totalInput: 12_400,
+          totalCachedInput: 5_600,
+          totalCombinedInput: 18_000,
           totalOutput: 3_100,
         },
       },
     });
 
-    expect(line).toBe("Copilot 82% | Cursor API - $2.40 | tok 12.4K in / 3.1K out");
+    expect(line).toBe("Copilot 82% | Cursor API - $2.40 | tok 12.4K (5.6K) in / 3.1K out");
   });
 
   it("summarizes errors as issue counts when quota segments exist and the count fits", () => {

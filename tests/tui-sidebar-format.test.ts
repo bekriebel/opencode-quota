@@ -38,11 +38,15 @@ describe("buildSidebarQuotaPanelLines", () => {
         ],
         sessionTokens: {
           totalInput: 12,
+          totalCachedInput: 5,
+          totalCombinedInput: 17,
           totalOutput: 34,
           models: [
             {
               modelID: "gpt-5\u001b[99m",
               input: 12,
+              cachedInput: 5,
+              totalInput: 17,
               output: 34,
             },
           ],
@@ -58,7 +62,7 @@ describe("buildSidebarQuotaPanelLines", () => {
     expect(rendered).not.toContain("\u0003");
     expect(rendered).toContain("Err: Bad");
     expect(rendered).toContain(SESSION_TOKEN_SECTION_HEADING);
-    expect(rendered).toContain("12 in  34 out");
+    expect(rendered).toContain("12 (5) in  34 out");
     expect(rendered).toContain("gpt-5");
   });
 
@@ -339,11 +343,15 @@ describe("buildSidebarQuotaPanelLines", () => {
         errors: [],
         sessionTokens: {
           totalInput: 372,
+          totalCachedInput: 120,
+          totalCombinedInput: 492,
           totalOutput: 41,
           models: [
             {
               modelID: "openai/gpt-5.4-mini",
               input: 372,
+              cachedInput: 120,
+              totalInput: 492,
               output: 41,
             },
           ],
@@ -355,7 +363,7 @@ describe("buildSidebarQuotaPanelLines", () => {
     expect(lines).toEqual([
       SESSION_TOKEN_SECTION_HEADING,
       "  openai/gpt-5.4-mini",
-      "    372 in  41 out",
+      "    372 (120) in  41 out",
     ]);
   });
 
@@ -370,11 +378,15 @@ describe("buildSidebarQuotaPanelLines", () => {
         errors: [],
         sessionTokens: {
           totalInput: 372,
+          totalCachedInput: 120,
+          totalCombinedInput: 492,
           totalOutput: 41,
           models: [
             {
               modelID: "openai/gpt-5.4-mini",
               input: 372,
+              cachedInput: 120,
+              totalInput: 492,
               output: 41,
             },
           ],
@@ -383,7 +395,7 @@ describe("buildSidebarQuotaPanelLines", () => {
     });
 
     expect(lines.every((line) => line.length <= TUI_SIDEBAR_MAX_WIDTH)).toBe(true);
-    expect(lines).toEqual([SESSION_TOKEN_SECTION_HEADING, "  372 in  41 out"]);
+    expect(lines).toEqual([SESSION_TOKEN_SECTION_HEADING, "  372 (120) in  41 out"]);
   });
 
   it("keeps value-only rows unchanged when percentDisplayMode is used", () => {

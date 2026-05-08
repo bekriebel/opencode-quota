@@ -35,6 +35,8 @@ export async function fetchSessionTokensForDisplay(params: {
         sessionTokens: {
           models: summary.models,
           totalInput: summary.totalInput,
+          totalCachedInput: summary.totalCachedInput,
+          totalCombinedInput: summary.totalCombinedInput,
           totalOutput: summary.totalOutput,
         },
       };

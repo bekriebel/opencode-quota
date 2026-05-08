@@ -821,6 +821,8 @@ export async function aggregateUsage(params: {
 export type SessionTokenRow = {
   modelID: string;
   input: number;
+  cachedInput: number;
+  totalInput: number;
   output: number;
 };
 
@@ -828,6 +830,8 @@ export type SessionTokenSummary = {
   sessionID: string;
   models: SessionTokenRow[];
   totalInput: number;
+  totalCachedInput: number;
+  totalCombinedInput: number;
   totalOutput: number;
 };
 
@@ -839,8 +843,10 @@ export async function getSessionTokenSummary(
 
   if (sessionMessages.length === 0) return null;
 
-  const byModel = new Map<string, { input: number; output: number }>();
+  const byModel = new Map<string, { input: number; cachedInput: number; totalInput: number; output: number }>();
   let totalInput = 0;
+  let totalCachedInput = 0;
+  let totalCombinedInput = 0;
   let totalOutput = 0;
 
   for (const msg of sessionMessages) {
@@ -848,34 +854,48 @@ export async function getSessionTokenSummary(
     if (!tokens) continue;
 
     const input = typeof tokens.input === "number" ? tokens.input : 0;
+    const cachedInput = typeof tokens.cache?.read === "number" ? tokens.cache.read : 0;
+    const totalInputForMessage = input + cachedInput;
     const output = typeof tokens.output === "number" ? tokens.output : 0;
 
     // Skip if both are 0
-    if (input === 0 && output === 0) continue;
+    if (totalInputForMessage === 0 && output === 0) continue;
 
     totalInput += input;
+    totalCachedInput += cachedInput;
+    totalCombinedInput += totalInputForMessage;
     totalOutput += output;
 
     const modelID = msg.modelID ?? "unknown";
     const existing = byModel.get(modelID);
     if (existing) {
       existing.input += input;
+      existing.cachedInput += cachedInput;
+      existing.totalInput += totalInputForMessage;
       existing.output += output;
     } else {
-      byModel.set(modelID, { input, output });
+      byModel.set(modelID, { input, cachedInput, totalInput: totalInputForMessage, output });
     }
   }
 
   // Sort by total tokens descending
   const models = Array.from(byModel.entries())
-    .map(([modelID, t]) => ({ modelID, input: t.input, output: t.output }))
-    .filter((m) => m.input > 0 || m.output > 0)
-    .sort((a, b) => b.input + b.output - (a.input + a.output));
+    .map(([modelID, t]) => ({
+      modelID,
+      input: t.input,
+      cachedInput: t.cachedInput,
+      totalInput: t.totalInput,
+      output: t.output,
+    }))
+    .filter((m) => m.totalInput > 0 || m.output > 0)
+    .sort((a, b) => b.totalInput + b.output - (a.totalInput + a.output));
 
   return {
     sessionID,
     models,
     totalInput,
+    totalCachedInput,
+    totalCombinedInput,
     totalOutput,
   };
 }
