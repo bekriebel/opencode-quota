@@ -100,7 +100,7 @@ function resolveCompanionSpecifier(specifier: string): string {
   try {
     return require.resolve(specifier);
   } catch (error) {
-    if (!isModuleNotFoundError(error)) {
+    if (!isFallthroughResolutionError(error)) {
       throw error;
     }
     return require.resolve(specifier, { paths: getCompanionResolvePaths() });
@@ -146,9 +146,9 @@ function buildInvalidState(importSpecifier: string, resolvedPath?: string): Reso
 
 function parseSourceCredentials(content: string): { clientId: string; clientSecret: string } | null {
   const clientId =
-    content.match(/(?:export\s+const|var)\s+GEMINI_CLIENT_ID\s*=\s*["']([^"']+)["']/)?.[1]?.trim() ?? "";
+    content.match(/(?:export\s+const|const|var)\s+GEMINI_CLIENT_ID\s*=\s*["']([^"']+)["']/)?.[1]?.trim() ?? "";
   const clientSecret =
-    content.match(/(?:export\s+const|var)\s+GEMINI_CLIENT_SECRET\s*=\s*["']([^"']+)["']/)?.[1]?.trim() ?? "";
+    content.match(/(?:export\s+const|const|var)\s+GEMINI_CLIENT_SECRET\s*=\s*["']([^"']+)["']/)?.[1]?.trim() ?? "";
 
   return clientId && clientSecret ? { clientId, clientSecret } : null;
 }
@@ -156,6 +156,8 @@ function parseSourceCredentials(content: string): { clientId: string; clientSecr
 function getRuntimeSourceConstantPaths(): string[] {
   return getCompanionResolvePaths().flatMap((cacheDir) => [
     join(cacheDir, "node_modules", COMPANION_PACKAGE_NAME, "src", "constants.ts"),
+    join(cacheDir, "node_modules", COMPANION_PACKAGE_NAME, "src", "constants.js"),
+    join(cacheDir, "node_modules", COMPANION_PACKAGE_NAME, "dist", "src", "constants.js"),
     join(cacheDir, "node_modules", COMPANION_PACKAGE_NAME, "dist", "index.js"),
   ]);
 }
@@ -209,6 +211,16 @@ async function tryResolveJsConstants(
   return buildConfiguredState({ importSpecifier, resolvedPath, clientId, clientSecret });
 }
 
+async function tryResolvePackageEntry(): Promise<ResolvedCompanionState | null> {
+  try {
+    const packageEntryPath = resolveCompanionSpecifier(COMPANION_PACKAGE_NAME);
+    const packageEntryResolved = await tryReadSourceConstantsPath(packageEntryPath);
+    return packageEntryResolved ?? buildInvalidState(COMPANION_PACKAGE_NAME, packageEntryPath);
+  } catch (error) {
+    return isFallthroughResolutionError(error) ? null : buildInvalidState(COMPANION_PACKAGE_NAME);
+  }
+}
+
 async function tryResolveSourceConstants(): Promise<ResolvedCompanionState | null> {
   let resolvedPath: string;
   try {
@@ -239,24 +251,11 @@ async function tryResolveSourceConstants(): Promise<ResolvedCompanionState | nul
       }
       resolvedPath = join(packageRoot, "src", "constants.ts");
     } catch (packageError) {
-      if (isPackagePathNotExportedError(packageError)) {
-        try {
-          const packageEntryPath = resolveCompanionSpecifier(COMPANION_PACKAGE_NAME);
-          const packageEntryResolved = await tryReadSourceConstantsPath(packageEntryPath);
-          if (packageEntryResolved) {
-            return packageEntryResolved;
-          }
-          return buildInvalidState(COMPANION_PACKAGE_NAME, packageEntryPath);
-        } catch (packageEntryError) {
-          return isModuleNotFoundError(packageEntryError)
-            ? null
-            : buildInvalidState(COMPANION_SOURCE_IMPORT_SPECIFIER);
-        }
+      if (isFallthroughResolutionError(packageError)) {
+        return tryResolvePackageEntry();
       }
 
-      return isModuleNotFoundError(packageError)
-        ? null
-        : buildInvalidState(COMPANION_SOURCE_IMPORT_SPECIFIER);
+      return buildInvalidState(COMPANION_SOURCE_IMPORT_SPECIFIER);
     }
   }
 
