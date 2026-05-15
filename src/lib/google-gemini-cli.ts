@@ -7,7 +7,6 @@ import {
 } from "./google-token-cache.js";
 import {
   clearGeminiCliCompanionCacheForTests as clearGeminiCliCompanionResolutionCacheForTests,
-  inspectGeminiCliCompanionPresence,
   resolveGeminiCliClientCredentials,
   type GeminiCliConfiguredCredentials,
 } from "./google-gemini-cli-companion.js";
@@ -265,15 +264,11 @@ export async function inspectGeminiCliAuthPresence(client?: ConfigClient): Promi
 }
 
 export async function hasGeminiCliQuotaRuntimeAvailable(client?: ConfigClient): Promise<boolean> {
-  const [authPresence, companionPresence] = await Promise.all([
-    inspectGeminiCliAuthPresence(client),
-    inspectGeminiCliCompanionPresence(),
-  ]);
+  const authPresence = await inspectGeminiCliAuthPresence(client);
 
   return (
     authPresence.state === "present" &&
-    authPresence.validAccountCount > 0 &&
-    companionPresence.state === "present"
+    authPresence.validAccountCount > 0
   );
 }
 
