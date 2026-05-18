@@ -188,8 +188,72 @@ describe("minimax-coding-plan provider", () => {
       window: "five_hour",
       name: "MiniMax Coding Plan (CN) 5h",
       group: "MiniMax Coding Plan (CN)",
-      right: "300/1500",
-      percentRemaining: 80,
+      right: "1200/1500",
+      percentRemaining: 20,
+    });
+  });
+
+  it.each([
+    { rawUsed: 0, right: "0/1500", percentRemaining: 100 },
+    { rawUsed: 1500, right: "1500/1500", percentRemaining: 0 },
+    { rawUsed: 13, total: 15000, right: "13/15000", percentRemaining: 100 },
+    { rawUsed: 1550, right: "1550/1500", percentRemaining: -3 },
+  ])(
+    "normalizes China Token Plan used count $rawUsed as $right",
+    async ({ rawUsed, total = 1500, right, percentRemaining }) => {
+      mockMiniMaxChinaAuthConfigured("china-key");
+      mockMiniMaxHttpSuccess([
+        createCodingPlanModel({
+          model_name: "MiniMax-M2.7",
+          current_interval_total_count: total,
+          current_interval_usage_count: rawUsed,
+          current_weekly_total_count: undefined,
+          current_weekly_usage_count: undefined,
+          weekly_remains_time: undefined,
+        }),
+      ]);
+
+      const out = await runChinaProviderFetch();
+
+      expectAttemptedWithNoErrors(out);
+      expect(out.entries).toHaveLength(1);
+      expect(out.entries[0]).toMatchObject({
+        window: "five_hour",
+        right,
+        percentRemaining,
+      });
+    },
+  );
+
+  it("selects the lowest-remaining China model using used-count semantics", async () => {
+    mockMiniMaxChinaAuthConfigured("china-key");
+    mockMiniMaxHttpSuccess([
+      createCodingPlanModel({
+        model_name: "MiniMax-M2.7",
+        current_interval_total_count: 1500,
+        current_interval_usage_count: 100,
+        current_weekly_total_count: undefined,
+        current_weekly_usage_count: undefined,
+        weekly_remains_time: undefined,
+      }),
+      createCodingPlanModel({
+        model_name: "MiniMax-M2.7-highspeed",
+        current_interval_total_count: 1500,
+        current_interval_usage_count: 1400,
+        current_weekly_total_count: undefined,
+        current_weekly_usage_count: undefined,
+        weekly_remains_time: undefined,
+      }),
+    ]);
+
+    const out = await runChinaProviderFetch();
+
+    expectAttemptedWithNoErrors(out);
+    expect(out.entries).toHaveLength(1);
+    expect(out.entries[0]).toMatchObject({
+      window: "five_hour",
+      right: "1400/1500",
+      percentRemaining: 7,
     });
   });
 

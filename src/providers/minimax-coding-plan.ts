@@ -37,11 +37,11 @@ const USER_AGENT = "OpenCode-Quota-Toast/1.0";
 interface MiniMaxModelRemain {
   model_name: string;
   current_interval_total_count: number;
-  /** Actually returns remaining quota (not usage). Usage = total - this value. */
+  /** Endpoint-specific raw count: international reports remaining, China reports used. */
   current_interval_usage_count: number;
   remains_time: number;
   current_weekly_total_count?: number;
-  /** Actually returns remaining quota (not usage). Usage = total - this value. */
+  /** Endpoint-specific raw count: international reports remaining, China reports used. */
   current_weekly_usage_count?: number;
   weekly_remains_time?: number;
 }
@@ -54,12 +54,19 @@ interface MiniMaxApiResponse {
   };
 }
 
+type MiniMaxCountSemantics = "remaining" | "used";
+
+const MINIMAX_COUNT_SEMANTICS_BY_ENDPOINT: Record<MiniMaxQuotaEndpointId, MiniMaxCountSemantics> = {
+  international: "remaining",
+  china: "used",
+};
+
 interface MiniMaxWindowSpec {
   window: MiniMaxResultEntry["window"];
   name: string;
   label: string;
   getTotal(model: MiniMaxModelRemain): number | undefined;
-  getRemaining(model: MiniMaxModelRemain): number | undefined;
+  getCount(model: MiniMaxModelRemain): number | undefined;
   getResetOffsetMs(model: MiniMaxModelRemain): number | undefined;
 }
 
@@ -69,7 +76,7 @@ const MINIMAX_WINDOW_SPECS: readonly MiniMaxWindowSpec[] = [
     name: "MiniMax Coding Plan 5h",
     label: "5h:",
     getTotal: (model) => model.current_interval_total_count,
-    getRemaining: (model) => model.current_interval_usage_count,
+    getCount: (model) => model.current_interval_usage_count,
     getResetOffsetMs: (model) => model.remains_time,
   },
   {
@@ -77,7 +84,7 @@ const MINIMAX_WINDOW_SPECS: readonly MiniMaxWindowSpec[] = [
     name: "MiniMax Coding Plan Weekly",
     label: "Weekly:",
     getTotal: (model) => model.current_weekly_total_count,
-    getRemaining: (model) => model.current_weekly_usage_count,
+    getCount: (model) => model.current_weekly_usage_count,
     getResetOffsetMs: (model) => model.weekly_remains_time,
   },
 ];
@@ -116,6 +123,20 @@ function clampRemaining(total: number, remaining: number): number {
   return Math.min(total, remaining);
 }
 
+function normalizeMiniMaxCounts(
+  total: number,
+  rawCount: number,
+  countSemantics: MiniMaxCountSemantics,
+): { used: number; remaining: number } {
+  if (countSemantics === "used") {
+    const used = Math.max(0, rawCount);
+    return { used, remaining: total - used };
+  }
+
+  const remaining = clampRemaining(total, rawCount);
+  return { used: total - remaining, remaining };
+}
+
 function isMiniMaxCodingModelName(modelName: string): boolean {
   const normalized = modelName.trim().toLowerCase();
   return normalized === "minimax-m*" || normalized.startsWith("minimax-m");
@@ -125,16 +146,16 @@ function buildMiniMaxEntry(
   model: MiniMaxModelRemain,
   spec: MiniMaxWindowSpec,
   providerLabel: string,
+  countSemantics: MiniMaxCountSemantics,
 ): MiniMaxResultEntry | null {
   const total = spec.getTotal(model);
-  const rawRemaining = spec.getRemaining(model);
+  const rawCount = spec.getCount(model);
   const resetOffsetMs = spec.getResetOffsetMs(model);
-  if (!isFiniteNumber(total) || !isFiniteNumber(rawRemaining) || !isFiniteNumber(resetOffsetMs)) {
+  if (!isFiniteNumber(total) || !isFiniteNumber(rawCount) || !isFiniteNumber(resetOffsetMs)) {
     return null;
   }
   if (total <= 0) return null;
-  const remaining = clampRemaining(total, rawRemaining);
-  const used = total - remaining;
+  const { used, remaining } = normalizeMiniMaxCounts(total, rawCount, countSemantics);
   const percentRemaining = roundPercent((remaining / total) * 100);
 
   return {
@@ -150,30 +171,37 @@ function buildMiniMaxEntry(
 
 function buildMiniMaxEntries(
   model: MiniMaxModelRemain,
-  providerLabel = MINIMAX_PROVIDER_LABEL,
+  providerLabel: string,
+  countSemantics: MiniMaxCountSemantics,
 ): MiniMaxResultEntry[] {
   return MINIMAX_WINDOW_SPECS.flatMap((spec) => {
-    const entry = buildMiniMaxEntry(model, spec, providerLabel);
+    const entry = buildMiniMaxEntry(model, spec, providerLabel, countSemantics);
     return entry ? [entry] : [];
   });
 }
 
-function getWorstPercent(model: MiniMaxModelRemain): number {
-  const percents = buildMiniMaxEntries(model).map((entry) => entry.percentRemaining);
+function getWorstPercent(model: MiniMaxModelRemain, countSemantics: MiniMaxCountSemantics): number {
+  const percents = buildMiniMaxEntries(model, MINIMAX_PROVIDER_LABEL, countSemantics).map(
+    (entry) => entry.percentRemaining,
+  );
   return percents.length > 0 ? Math.min(...percents) : Number.POSITIVE_INFINITY;
 }
 
-function selectCanonicalMiniMaxModel(models: MiniMaxModelRemain[]): MiniMaxModelRemain | null {
+function selectCanonicalMiniMaxModel(
+  models: MiniMaxModelRemain[],
+  countSemantics: MiniMaxCountSemantics,
+): MiniMaxModelRemain | null {
   if (models.length === 0) return null;
 
   const wildcardModel =
     models.find((model) => model.model_name.trim().toLowerCase() === "minimax-m*") ?? null;
-  if (wildcardModel && Number.isFinite(getWorstPercent(wildcardModel))) {
+  if (wildcardModel && Number.isFinite(getWorstPercent(wildcardModel, countSemantics))) {
     return wildcardModel;
   }
 
   return [...models].sort((left, right) => {
-    const percentDiff = getWorstPercent(left) - getWorstPercent(right);
+    const percentDiff =
+      getWorstPercent(left, countSemantics) - getWorstPercent(right, countSemantics);
     if (percentDiff !== 0) return percentDiff;
     return left.model_name.localeCompare(right.model_name);
   })[0] ?? null;
@@ -192,7 +220,9 @@ export async function queryMiniMaxQuota(
   apiKey: string,
   options: { requestTimeoutMs?: number; endpoint?: MiniMaxQuotaEndpointId; label?: string } = {},
 ): Promise<MiniMaxResult> {
-  const endpoint = getMiniMaxQuotaEndpoint(options.endpoint ?? "international");
+  const endpointId = options.endpoint ?? "international";
+  const endpoint = getMiniMaxQuotaEndpoint(endpointId);
+  const countSemantics = MINIMAX_COUNT_SEMANTICS_BY_ENDPOINT[endpointId];
   try {
     const response = await fetchWithTimeout(
       endpoint.quotaUrl,
@@ -227,9 +257,9 @@ export async function queryMiniMaxQuota(
       (model): model is MiniMaxModelRemain =>
         isMiniMaxModelRecord(model) && isMiniMaxCodingModelName(model.model_name),
     );
-    const canonicalModel = selectCanonicalMiniMaxModel(matchingModels);
+    const canonicalModel = selectCanonicalMiniMaxModel(matchingModels, countSemantics);
     const entries = canonicalModel
-      ? buildMiniMaxEntries(canonicalModel, options.label ?? MINIMAX_PROVIDER_LABEL)
+      ? buildMiniMaxEntries(canonicalModel, options.label ?? MINIMAX_PROVIDER_LABEL, countSemantics)
       : [];
 
     return { success: true, entries };
