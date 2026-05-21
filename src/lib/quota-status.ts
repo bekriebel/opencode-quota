@@ -11,6 +11,7 @@ import { getAnthropicDiagnostics } from "./anthropic.js";
 import { getChutesKeyDiagnostics } from "./chutes.js";
 import { getCrofKeyDiagnostics } from "./crof.js";
 import { getNanoGptKeyDiagnostics, queryNanoGptQuota } from "./nanogpt.js";
+import { getDeepSeekKeyDiagnostics } from "./deepseek.js";
 import { getSyntheticKeyDiagnostics } from "./synthetic.js";
 import { getCopilotQuotaAuthDiagnostics } from "./copilot.js";
 import {
@@ -119,7 +120,7 @@ type BasicApiKeyDiagnostics = {
   checkedPaths: string[];
 };
 
-type NanoGptApiKeyDiagnostics = BasicApiKeyDiagnostics & {
+type ApiKeyDiagnosticsWithAuthPaths = BasicApiKeyDiagnostics & {
   authPaths: string[];
 };
 
@@ -398,20 +399,20 @@ function appendCompactLiveProbeRows(
   }
 }
 
-function getDefaultNanoGptApiKeyDiagnostics(): NanoGptApiKeyDiagnostics {
+function getDefaultApiKeyDiagnosticsWithAuthPaths(): ApiKeyDiagnosticsWithAuthPaths {
   return {
     ...getDefaultBasicApiKeyDiagnostics(),
     authPaths: [],
   };
 }
 
-async function readNanoGptApiKeyDiagnostics(
-  read: () => Promise<NanoGptApiKeyDiagnostics>,
-): Promise<NanoGptApiKeyDiagnostics> {
+async function readApiKeyDiagnosticsWithAuthPaths(
+  read: () => Promise<ApiKeyDiagnosticsWithAuthPaths>,
+): Promise<ApiKeyDiagnosticsWithAuthPaths> {
   try {
     return await read();
   } catch {
-    return getDefaultNanoGptApiKeyDiagnostics();
+    return getDefaultApiKeyDiagnosticsWithAuthPaths();
   }
 }
 
@@ -518,6 +519,14 @@ function supportedProviderPricingRow(params: {
       id,
       pricing: "no",
       notes: "subscription request quota + account balance (not token-priced)",
+    };
+  }
+
+  if (id === "deepseek") {
+    return {
+      id,
+      pricing: "no",
+      notes: "account balance only (not token-priced)",
     };
   }
 
@@ -1341,8 +1350,18 @@ export async function buildQuotaStatusReport(params: {
   appendProviderCompactLiveProbeRows(crofRows, "crof", params.providerLiveProbes);
   sections.push(createKvSection("crof", "crof:", crofRows));
 
+  const deepSeekDiag = await readApiKeyDiagnosticsWithAuthPaths(getDeepSeekKeyDiagnostics);
+  const deepSeekRows: ReportKvRow[] = [
+    { key: "api_key_configured", value: deepSeekDiag.configured ? "true" : "false" },
+    { key: "api_key_source", value: deepSeekDiag.source ?? "(none)" },
+    { key: "api_key_checked_paths", value: joinOrNone(deepSeekDiag.checkedPaths) },
+    { key: "api_key_auth_paths", value: joinOrNone(deepSeekDiag.authPaths) },
+  ];
+  appendProviderCompactLiveProbeRows(deepSeekRows, "deepseek", params.providerLiveProbes);
+  sections.push(createKvSection("deepseek", "deepseek:", deepSeekRows));
+
   // === nanogpt ===
-  const nanoGptDiag = await readNanoGptApiKeyDiagnostics(getNanoGptKeyDiagnostics);
+  const nanoGptDiag = await readApiKeyDiagnosticsWithAuthPaths(getNanoGptKeyDiagnostics);
   const nanoGptRows: ReportKvRow[] = [
     { key: "api_key_configured", value: nanoGptDiag.configured ? "true" : "false" },
     { key: "api_key_source", value: nanoGptDiag.source ?? "(none)" },

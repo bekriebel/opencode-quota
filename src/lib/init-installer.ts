@@ -456,6 +456,16 @@ function planMaintainerAnnouncementsConfig(params: {
     `${pathLabel}.enabled`,
     params.edit,
   );
+
+  if (enabled) {
+    setInstallerOwnedSetting(
+      maintainerAnnouncements,
+      "home",
+      true,
+      `${pathLabel}.home`,
+      params.edit,
+    );
+  }
 }
 
 function planTuiCompactStatusConfig(params: {

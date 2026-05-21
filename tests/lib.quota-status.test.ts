@@ -146,6 +146,15 @@ const nanoGptMocks = vi.hoisted(() => ({
   queryNanoGptQuota: vi.fn(async () => null),
 }));
 
+const deepSeekMocks = vi.hoisted(() => ({
+  getDeepSeekKeyDiagnostics: vi.fn(async () => ({
+    configured: false,
+    source: null,
+    checkedPaths: [],
+    authPaths: ["/tmp/auth.json"],
+  })),
+}));
+
 const syntheticMocks = vi.hoisted(() => ({
   getSyntheticKeyDiagnostics: vi.fn(async () => ({
     configured: false,
@@ -260,6 +269,10 @@ vi.mock("../src/lib/crof.js", () => ({
 vi.mock("../src/lib/nanogpt.js", () => ({
   getNanoGptKeyDiagnostics: nanoGptMocks.getNanoGptKeyDiagnostics,
   queryNanoGptQuota: nanoGptMocks.queryNanoGptQuota,
+}));
+
+vi.mock("../src/lib/deepseek.js", () => ({
+  getDeepSeekKeyDiagnostics: deepSeekMocks.getDeepSeekKeyDiagnostics,
 }));
 
 vi.mock("../src/lib/copilot.js", () => ({
@@ -399,6 +412,7 @@ vi.mock("../src/providers/registry.js", () => ({
     { id: "synthetic" },
     { id: "crof" },
     { id: "nanogpt" },
+    { id: "deepseek" },
     { id: "kimi-for-coding" },
     { id: "kimi-code" },
   ],
@@ -1127,6 +1141,24 @@ describe("buildQuotaStatusReport", () => {
     expect(report).toContain("- live_error_balance: NanoGPT API error 401: Unauthorized");
   });
 
+  it("reports DeepSeek API key diagnostics", async () => {
+    deepSeekMocks.getDeepSeekKeyDiagnostics.mockResolvedValueOnce({
+      configured: true,
+      source: "env:DEEPSEEK_API_KEY",
+      checkedPaths: ["env:DEEPSEEK_API_KEY"],
+      authPaths: ["/tmp/auth.json"],
+    });
+
+    const report = await buildProviderStatusReport("deepseek");
+
+    expect(report).toContain("deepseek:");
+    expect(report).toContain("- api_key_configured: true");
+    expect(report).toContain("- api_key_source: env:DEEPSEEK_API_KEY");
+    expect(report).toContain("- api_key_checked_paths: env:DEEPSEEK_API_KEY");
+    expect(report).toContain("- api_key_auth_paths: /tmp/auth.json");
+    expect(report).toContain("- deepseek: pricing=no (account balance only (not token-priced))");
+  });
+
   it("reports OpenCode Go rolling, weekly, and monthly live usage when configured", async () => {
     openCodeGoMocks.getOpenCodeGoConfigDiagnostics.mockResolvedValueOnce({
       state: "configured",
@@ -1648,6 +1680,7 @@ zhipu:
 synthetic:
 chutes:
 crof:
+deepseek:
 nanogpt:
 copilot_quota_auth:
 google_antigravity:

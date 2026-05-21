@@ -617,10 +617,10 @@ describe("init installer planning and merge behavior", () => {
 
     expect(existsSync(join(projectDir, "tui.json"))).toBe(false);
     const quotaConfig = readJson(join(projectDir, "opencode-quota", "quota-toast.json"));
-    expect(quotaConfig.maintainerAnnouncements).toEqual({ enabled: true });
+    expect(quotaConfig.maintainerAnnouncements).toEqual({ enabled: true, home: true });
   });
 
-  it("rerun with maintainer announcements enabled restores an installer-created opt-out", async () => {
+  it("rerun with maintainer announcements enabled restores installer-created opt-outs", async () => {
     const projectDir = join(tempDir, "project");
     mkdirSync(join(projectDir, "opencode-quota"), { recursive: true });
     writeFileSync(
@@ -631,7 +631,7 @@ describe("init installer planning and merge behavior", () => {
         formatStyle: "singleWindow",
         percentDisplayMode: "remaining",
         showSessionTokens: true,
-        maintainerAnnouncements: { enabled: false },
+        maintainerAnnouncements: { enabled: false, home: false },
       }),
       "utf8",
     );
@@ -652,11 +652,12 @@ describe("init installer planning and merge behavior", () => {
 
     const quotaEdit = plan.edits.find((edit) => edit.kind === "quota");
     expect(quotaEdit?.updatedKeys).toContain("quotaToast.maintainerAnnouncements.enabled");
+    expect(quotaEdit?.updatedKeys).toContain("quotaToast.maintainerAnnouncements.home");
 
     await applyInitInstallerPlan(plan);
 
     const quotaConfig = readJson(join(projectDir, "opencode-quota", "quota-toast.json"));
-    expect(quotaConfig.maintainerAnnouncements).toEqual({ enabled: true });
+    expect(quotaConfig.maintainerAnnouncements).toEqual({ enabled: true, home: true });
   });
 
   it("normalizes empty and mixed none quota UI choices defensively", async () => {

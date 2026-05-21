@@ -89,6 +89,42 @@ describe("queryDeepSeekBalance", () => {
     );
   });
 
+  it("normalizes malformed balance strings", async () => {
+    process.env.DEEPSEEK_API_KEY = "test-key";
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              is_available: true,
+              balance_infos: [
+                {
+                  currency: "USD",
+                  total_balance: "12.34\u001b[31m",
+                  granted_balance: "1.2345678901234567890",
+                  topped_up_balance: "not-a-number",
+                },
+              ],
+            }),
+            { status: 200 },
+          ),
+      ) as any,
+    );
+
+    const out = await queryDeepSeekBalance();
+
+    expect(out && out.success ? out.balanceInfos : []).toEqual([
+      {
+        currency: "USD",
+        totalBalance: "0.00",
+        grantedBalance: "0.00",
+        toppedUpBalance: "0.00",
+      },
+    ]);
+  });
+
   it("filters unsupported currencies and preserves supported CNY balances", async () => {
     process.env.DEEPSEEK_API_KEY = "test-key";
 

@@ -53,6 +53,16 @@ function getNonEmptyString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
 }
 
+const DEEPSEEK_DECIMAL_BALANCE_RE = /^(?:0|[1-9]\d*)(?:\.\d{1,18})?$/u;
+
+function normalizeDeepSeekBalance(value: unknown): string {
+  const raw = getNonEmptyString(value);
+  if (!raw || raw.length > 64 || !DEEPSEEK_DECIMAL_BALANCE_RE.test(raw)) {
+    return "0.00";
+  }
+  return raw;
+}
+
 function parseDeepSeekBalance(payload: unknown): DeepSeekBalanceResult {
   if (!isRecord(payload)) {
     throw new Error("DeepSeek balance response returned an unexpected response shape");
@@ -72,9 +82,9 @@ function parseDeepSeekBalance(payload: unknown): DeepSeekBalanceResult {
 
       balanceInfos.push({
         currency: currency.toUpperCase() as DeepSeekCurrency,
-        totalBalance: getNonEmptyString(info.total_balance) ?? "0.00",
-        grantedBalance: getNonEmptyString(info.granted_balance) ?? "0.00",
-        toppedUpBalance: getNonEmptyString(info.topped_up_balance) ?? "0.00",
+        totalBalance: normalizeDeepSeekBalance(info.total_balance),
+        grantedBalance: normalizeDeepSeekBalance(info.granted_balance),
+        toppedUpBalance: normalizeDeepSeekBalance(info.topped_up_balance),
       });
     }
   }
