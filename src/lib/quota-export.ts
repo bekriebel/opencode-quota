@@ -13,6 +13,10 @@ import { getOpencodeRuntimeDirs } from "./opencode-runtime-paths.js";
 import { readCachedProviderResult } from "./quota-state.js";
 import { isValueEntry } from "./entries.js";
 import { normalizeSingleWindowWindowLabel } from "./quota-render-data.js";
+import { sanitizeSingleLineDisplaySnippet } from "./display-sanitize.js";
+
+/** Max length for an exported provider error message after sanitization. */
+const EXPORT_ERROR_MAX_LENGTH = 240;
 
 /**
  * Resolves the export file path from a configured value.
@@ -39,10 +43,11 @@ function toExportEntry(entry: QuotaToastEntry): QuotaExportEntry {
     ? undefined
     : entry.percentRemaining;
 
-  const window =
-    normalizeSingleWindowWindowLabel(entry.label) ??
-    normalizeSingleWindowWindowLabel(entry.name) ??
-    undefined;
+  // Derive the window only from the explicit row label. The entry name is a
+  // human-readable display string (e.g. "Monthly Premium Requests") and must
+  // not be parsed as a machine-readable window, or single-window providers
+  // would emit a spurious `window` that consumers branch on.
+  const window = normalizeSingleWindowWindowLabel(entry.label) ?? undefined;
 
   const resetAt = entry.resetTimeIso
     ? Math.floor(new Date(entry.resetTimeIso).getTime() / 1000)
@@ -94,7 +99,10 @@ export async function buildQuotaExport(params: {
       providers[provider.id] = {
         status: "error",
         fetchedAt,
-        error: read.result.errors[0].message,
+        error: sanitizeSingleLineDisplaySnippet(
+          read.result.errors[0].message,
+          EXPORT_ERROR_MAX_LENGTH,
+        ),
       };
       fetchedAtValues.push(fetchedAt);
       continue;

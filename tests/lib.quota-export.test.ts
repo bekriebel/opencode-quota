@@ -111,6 +111,9 @@ describe("buildQuotaExport", () => {
           },
           { name: "OpenCode Go", kind: "value", value: "$42.50", label: "Weekly:" },
           { name: "Custom Metric", percentRemaining: 100, label: "Arbitrary:" },
+          // Name matches a window keyword ("Monthly") but the label does not:
+          // window must be derived from label only, so this stays undefined.
+          { name: "Monthly Premium Requests", percentRemaining: 40, label: "Usage:" },
         ],
         errors: [],
       },
@@ -143,6 +146,9 @@ describe("buildQuotaExport", () => {
         },
         { name: "OpenCode Go", window: "Weekly", unlimited: false },
         { name: "Custom Metric", percentRemaining: 100, unlimited: false },
+        // Monthly Premium Requests has label "Usage:" (not "Monthly"),
+        // so window must NOT be set.
+        { name: "Monthly Premium Requests", percentRemaining: 40, unlimited: false },
       ]);
     }
   });
@@ -160,13 +166,14 @@ describe("buildQuotaExport", () => {
     expect(exportData.providers.ghost).toEqual({ status: "unavailable" });
   });
 
-  it("returns status error when cache has only errors", async () => {
+  it("returns status error with a sanitized message when cache has only errors", async () => {
     mockReadCachedProviderResult.mockResolvedValue({
       hit: true,
       result: {
         attempted: true,
         entries: [],
-        errors: [{ label: "Fetch", message: "Request failed with 429" }],
+        // Includes an ANSI escape + control chars + newline that must be stripped.
+        errors: [{ label: "Fetch", message: "Request failed\n\u001b[31mwith 429\u0007" }],
       },
       timestamp: new Date("2026-06-01T11:00:00.000Z").getTime(),
     });
