@@ -392,7 +392,7 @@ describe("runCliShowCommand", () => {
   });
 
   // ──────────────────────────────────────────────
-  //  --json / --cached / --threshold tests
+  //  --json / --threshold tests
   // ──────────────────────────────────────────────
 
   it("--json outputs valid JSON to stdout with cached provider data", async () => {
@@ -495,7 +495,7 @@ describe("runCliShowCommand", () => {
     expect(parsed.providers.synthetic.entries[0].unlimited).toBe(false);
   });
 
-  it("--cached flag implies --json and returns unavailable when no cache exists", async () => {
+  it("--json reads from cache only and returns unavailable when no cache exists", async () => {
     const provider = {
       id: "synthetic",
       isAvailable: vi.fn().mockResolvedValue(true),
@@ -514,11 +514,11 @@ describe("runCliShowCommand", () => {
       "utf8",
     );
 
-    // Run --cached WITHOUT populating cache first → all unavailable.
+    // Run --json WITHOUT populating cache first → all unavailable, no fetch.
     const jsonOut = createCaptureStream();
     const jsonErr = createCaptureStream();
     const jsonCode = await runCliShowCommand({
-      argv: ["--cached"],
+      argv: ["--json"],
       cwd: workspaceDir,
       stdout: jsonOut.stream as any,
       stderr: jsonErr.stream as any,
@@ -735,7 +735,7 @@ describe("runCliShowCommand", () => {
     expect(jsonErr.output).toContain("Missing value for --threshold");
   });
 
-  it("--threshold without --json or --cached produces exit code 1 with error", async () => {
+  it("--threshold without --json produces exit code 1 with error", async () => {
     const stdout = createCaptureStream();
     const stderr = createCaptureStream();
 
@@ -748,7 +748,7 @@ describe("runCliShowCommand", () => {
 
     expect(code).toBe(1);
     expect(stdout.output).toBe("");
-    expect(stderr.output).toContain("--threshold requires --json or --cached");
+    expect(stderr.output).toContain("--threshold requires --json");
   });
 
   it("--threshold > 100 is accepted (warned but accepted)", async () => {

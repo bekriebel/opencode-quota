@@ -29,29 +29,30 @@ export interface RunCliShowCommandOptions {
 }
 
 type ParsedShowArgs =
-  | { ok: true; providerId?: string; help: boolean; json: boolean; cached: boolean; threshold?: number }
+  | { ok: true; providerId?: string; help: boolean; json: boolean; threshold?: number }
   | { ok: false; error: string };
 
 const SHOW_USAGE = [
   "Usage:",
-  "  npx @slkiser/opencode-quota show [--provider <provider-id>]",
+  "  npx @slkiser/opencode-quota show [--provider <provider-id>] [--json] [--threshold <pct>]",
   "",
   "Options:",
   "  --provider <provider-id>  Show quota for one provider",
+  "  --json                    Machine-readable JSON output (reads from cache)",
+  "  --threshold <pct>         With --json, exit 1 if any provider is below <pct>% remaining",
   "  --help, -h                Show help",
 ].join("\n");
 
 function parseShowArgs(argv: string[]): ParsedShowArgs {
   let providerId: string | undefined;
   let json = false;
-  let cached = false;
   let threshold: number | undefined;
 
   for (let index = 0; index < argv.length; index++) {
     const arg = argv[index];
 
     if (arg === "--help" || arg === "-h") {
-      return { ok: true, help: true, json: false, cached: false };
+      return { ok: true, help: true, json: false };
     }
 
     if (arg === "--json") {
@@ -59,40 +60,23 @@ function parseShowArgs(argv: string[]): ParsedShowArgs {
       continue;
     }
 
-    if (arg === "--cached") {
-      cached = true;
-      json = true;
-      continue;
-    }
-
-    if (arg === "--threshold") {
-      const value = argv[index + 1];
-      if (!value || value.startsWith("-")) {
-        return { ok: false, error: "Missing value for --threshold." };
+    if (arg === "--threshold" || arg.startsWith("--threshold=")) {
+      let value: string | undefined;
+      if (arg === "--threshold") {
+        value = argv[index + 1];
+        if (!value || value.startsWith("-")) {
+          return { ok: false, error: "Missing value for --threshold." };
+        }
+        index += 1;
+      } else {
+        value = arg.slice("--threshold=".length).trim();
+        if (!value) {
+          return { ok: false, error: "Missing value for --threshold." };
+        }
       }
       const num = Number(value);
       if (!Number.isFinite(num) || num <= 0) {
         return { ok: false, error: "--threshold must be a positive finite number." };
-      }
-      if (num > 100) {
-        // Warn but accept
-      }
-      threshold = num;
-      index += 1;
-      continue;
-    }
-
-    if (arg.startsWith("--threshold=")) {
-      const value = arg.slice("--threshold=".length).trim();
-      if (!value) {
-        return { ok: false, error: "Missing value for --threshold." };
-      }
-      const num = Number(value);
-      if (!Number.isFinite(num) || num <= 0) {
-        return { ok: false, error: "--threshold must be a positive finite number." };
-      }
-      if (num > 100) {
-        // Warn but accept
       }
       threshold = num;
       continue;
@@ -131,10 +115,10 @@ function parseShowArgs(argv: string[]): ParsedShowArgs {
   }
 
   if (threshold !== undefined && !json) {
-    return { ok: false, error: "--threshold requires --json or --cached." };
+    return { ok: false, error: "--threshold requires --json." };
   }
 
-  return { ok: true, providerId, help: false, json, cached, threshold };
+  return { ok: true, providerId, help: false, json, threshold };
 }
 
 function cloneCliConfig(config: QuotaToastConfig): QuotaToastConfig {
@@ -201,11 +185,10 @@ function writeLine(stream: Pick<NodeJS.WriteStream, "write">, message: string): 
 async function runCliShowJsonOutput(params: {
   runtime: Awaited<ReturnType<typeof resolveQuotaRuntimeContext>>;
   providerId?: string;
-  cached: boolean;
   threshold?: number;
   stdout: Pick<NodeJS.WriteStream, "write">;
 }): Promise<number> {
-  const { runtime, providerId, cached: _cached, threshold, stdout } = params;
+  const { runtime, providerId, threshold, stdout } = params;
 
   const config = cloneCliConfig(runtime.config);
   if (providerId) {
@@ -292,7 +275,6 @@ export async function runCliShowCommand(options: RunCliShowCommandOptions = {}):
       return runCliShowJsonOutput({
         runtime,
         providerId,
-        cached: parsed.cached,
         threshold: parsed.threshold,
         stdout,
       });

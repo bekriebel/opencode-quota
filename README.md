@@ -185,7 +185,7 @@ For more examples, see [Common configuration](#common-configuration). For every 
 | --- | --- |
 | `opencode-quota show` | Terminal quota-only quick glance |
 | `opencode-quota show --json` | Machine-readable JSON output for external tools |
-| `opencode-quota show --cached --threshold <pct>` | Exit `1` if any provider is below `<pct>%` remaining |
+| `opencode-quota show --json --threshold <pct>` | Exit `1` if any provider is below `<pct>%` remaining |
 | `/quota` | Detailed quota report |
 | `/quota_status` | Config, provider, auth, pricing, `enabled`/`home` announcement config, `source=bundled_only`, `network=false`, and active/future/expired announcement counts |
 | `/quota_announcements` | List active bundled maintainer notices |
@@ -459,16 +459,15 @@ Quota data is available to external tools via two surfaces that emit the same JS
 ### CLI: `show --json`
 
 ```
-opencode-quota show --json [--cached] [--threshold <pct>] [--provider <id>]
+opencode-quota show --json [--threshold <pct>] [--provider <id>]
 ```
 
 | Flag | Behavior |
 |---|---|
-| `--json` | Emit JSON to stdout instead of human-readable text |
-| `--cached` | Read from disk cache only — no network calls, <10 ms |
-| `--threshold <pct>` | Exit `1` if any enabled provider is below `<pct>`% remaining |
+| `--json` | Emit JSON to stdout instead of human-readable text. Reads from the disk cache only — no network calls, <10 ms |
+| `--threshold <pct>` | With `--json`, exit `1` if any enabled provider is below `<pct>`% remaining |
 
-`--cached` reads from the per-provider disk cache that the TUI refreshes every 60 s. When the TUI is running, the cache is always warm.
+`--json` reads from the per-provider disk cache that the TUI refreshes every 60 s. When the TUI is running, the cache is always warm.
 
 ### Export file (TUI background writer)
 
@@ -484,7 +483,7 @@ When enabled, the TUI writes a unified JSON file after each background refresh (
 }
 ```
 
-The file is written atomically. Write errors are logged and never affect TUI rendering.
+The file is written atomically. Write errors are silently ignored and never affect TUI rendering.
 
 ### JSON schema
 
@@ -534,13 +533,13 @@ Provider `status` values:
 
 **CI gate — abort if quota is low:**
 ```bash
-npx @slkiser/opencode-quota show --cached --threshold 5
+npx @slkiser/opencode-quota show --json --threshold 5
 # exits 1 if any enabled provider is below 5% remaining
 ```
 
 **Shell script — branch on remaining quota:**
 ```bash
-PCT=$(opencode-quota show --json --cached | jq '.providers["github-copilot"].entries[0].percentRemaining')
+PCT=$(opencode-quota show --json | jq '.providers["github-copilot"].entries[0].percentRemaining')
 (( ${PCT%.*} < 10 )) && echo "Low quota, skipping." && exit 0
 ```
 
@@ -555,7 +554,7 @@ set -g status-right '#(jq -r "[.providers|to_entries[]|select(.value.status==\"o
 ```toml
 # starship.toml
 [custom.quota]
-command = "opencode-quota show --json --cached 2>/dev/null | jq -r '[.providers|to_entries[]|select(.value.status==\"ok\")|(.value.entries[0].percentRemaining|floor|tostring)+\"%\"]|join(\" \")'"
+command = "opencode-quota show --json 2>/dev/null | jq -r '[.providers|to_entries[]|select(.value.status==\"ok\")|(.value.entries[0].percentRemaining|floor|tostring)+\"%\"]|join(\" \")'"
 when = "true"
 interval = 60
 ```
@@ -575,7 +574,7 @@ inotifywait -m -e close_write ~/.cache/opencode/quota-export.json \
 import json, subprocess
 
 data = json.loads(subprocess.check_output(
-    ["opencode-quota", "show", "--json", "--cached"], timeout=1
+    ["opencode-quota", "show", "--json"], timeout=1
 ))
 best = max(
     (k for k, v in data["providers"].items() if v["status"] == "ok"),
