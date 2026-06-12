@@ -1308,7 +1308,7 @@ export const QuotaToastPlugin: Plugin = async ({ client }) => {
       }
     } finally {
       const state = deferredQuotaRefreshes.get(sessionID);
-      if (state) {
+      if (state && state === pendingDeferred) {
         state.inFlight = false;
       }
     }
