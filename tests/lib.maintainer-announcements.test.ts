@@ -55,8 +55,8 @@ describe("maintainer announcements", () => {
     ]);
   });
 
-  it("allows provider-targeted announcements when enabledProviders is auto", () => {
-    const active = getActiveMaintainerAnnouncements({
+  it("requires concrete provider ids for provider-targeted announcements", () => {
+    const autoEvaluations = evaluateMaintainerAnnouncements({
       nowMs: NOW_MS,
       enabledProviders: "auto",
       announcements: [
@@ -66,7 +66,18 @@ describe("maintainer announcements", () => {
         },
       ],
     });
+    const active = getActiveMaintainerAnnouncements({
+      nowMs: NOW_MS,
+      enabledProviders: ["copilot"],
+      announcements: [
+        {
+          ...BASE_ANNOUNCEMENT,
+          providerIds: ["copilot"],
+        },
+      ],
+    });
 
+    expect(autoEvaluations).toMatchObject([{ active: false, reasons: ["provider_mismatch"] }]);
     expect(active).toHaveLength(1);
   });
 

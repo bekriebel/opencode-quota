@@ -110,8 +110,10 @@ export function evaluateMaintainerAnnouncements(params?: {
 }): MaintainerAnnouncementEvaluation[] {
   const nowMs = params?.nowMs ?? Date.now();
   const enabledProviders = params?.enabledProviders ?? "auto";
-  const explicitEnabledProviderIds =
-    enabledProviders === "auto" ? undefined : normalizedProviderIds(enabledProviders);
+  // "auto" is unresolved provider scope here; provider-targeted announcements require
+  // callers to pass concrete detected provider IDs.
+  const concreteEnabledProviderIds =
+    enabledProviders === "auto" ? [] : normalizedProviderIds(enabledProviders);
 
   return [...(params?.announcements ?? BUNDLED_MAINTAINER_ANNOUNCEMENTS)]
     .map((announcement): MaintainerAnnouncementEvaluation => {
@@ -132,9 +134,9 @@ export function evaluateMaintainerAnnouncements(params?: {
       const announcementProviderIds = normalizedProviderIds(providerIds ?? []);
       if (providerIds && announcementProviderIds.length === 0) {
         reasons.push("invalid_provider_ids");
-      } else if (announcementProviderIds.length > 0 && explicitEnabledProviderIds) {
-        const explicitSet = new Set(explicitEnabledProviderIds);
-        if (!announcementProviderIds.some((providerId) => explicitSet.has(providerId))) {
+      } else if (announcementProviderIds.length > 0) {
+        const enabledProviderSet = new Set(concreteEnabledProviderIds);
+        if (!announcementProviderIds.some((providerId) => enabledProviderSet.has(providerId))) {
           reasons.push("provider_mismatch");
         }
       }

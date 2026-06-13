@@ -28,7 +28,29 @@ jobs:
               return;
             }
 
-            const body = issue.body || "";
+            if (context.payload.action === "reopened") {
+              try {
+                const { data: permission } = await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  username: context.actor,
+                });
+                if (["admin", "maintain", "write"].includes(permission.permission)) {
+                  core.info(`Skipping malformed issue auto-close for maintainer-reopened issue by ${context.actor}.`);
+                  return;
+                }
+              } catch (error) {
+                core.info(`Could not determine reopen actor permission for ${context.actor}; continuing validation. ${error}`);
+              }
+            }
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              per_page: 100,
+            });
+            const validationBodies = [issue.body || "", ...comments.map((comment) => comment.body || "")];
             const labels = (issue.labels || []).map((label) => label.name);
             const title = issue.title || "";
 
@@ -57,24 +79,28 @@ jobs:
 
             const hasHeading = (heading) => {
               const escaped = escapeRegExp(heading);
-              return new RegExp(`^${escaped}$`, "m").test(body);
+              return validationBodies.some((body) => new RegExp(`^${escaped}$`, "m").test(body));
             };
 
-            const getSection = (heading) => {
-              const lines = body.split(/\r?\n/);
-              const start = lines.findIndex((line) => line.trim() === heading);
-              if (start === -1) {
-                return "";
-              }
-
-              const sectionLines = [];
-              for (const line of lines.slice(start + 1)) {
-                if (/^###\s+/.test(line.trim())) {
-                  break;
+            const getSections = (heading) => {
+              const sections = [];
+              for (const body of validationBodies) {
+                const lines = body.split(/\r?\n/);
+                const start = lines.findIndex((line) => line.trim() === heading);
+                if (start === -1) {
+                  continue;
                 }
-                sectionLines.push(line);
+
+                const sectionLines = [];
+                for (const line of lines.slice(start + 1)) {
+                  if (/^###\s+/.test(line.trim())) {
+                    break;
+                  }
+                  sectionLines.push(line);
+                }
+                sections.push(sectionLines.join("\n"));
               }
-              return sectionLines.join("\n");
+              return sections;
             };
 
             const normalize = (value) => value.replace(/\r/g, "").trim();
@@ -89,12 +115,14 @@ jobs:
                 return true;
               }
 
-              const value = normalize(getSection(heading));
-              if (isBlankResponse(value)) {
-                return false;
-              }
+              return getSections(heading).some((section) => {
+                const value = normalize(section);
+                if (isBlankResponse(value)) {
+                  return false;
+                }
 
-              return !placeholders.some((placeholder) => value === placeholder);
+                return !placeholders.some((placeholder) => value === placeholder);
+              });
             };
 
             const hasCheckedRequiredCheckbox = (heading, label) => {
@@ -103,7 +131,7 @@ jobs:
               }
 
               const escaped = escapeRegExp(label);
-              return new RegExp(`^- \\[x\\] ${escaped}$`, "im").test(getSection(heading));
+              return getSections(heading).some((section) => new RegExp(`^- \\[x\\] ${escaped}$`, "im").test(section));
             };
 
             const hasConcreteAcceptanceCriteria = () => {
@@ -112,17 +140,19 @@ jobs:
                 return true;
               }
 
-              const value = normalize(getSection(heading));
-              if (isBlankResponse(value)) {
-                return false;
-              }
+              return getSections(heading).some((section) => {
+                const value = normalize(section);
+                if (isBlankResponse(value)) {
+                  return false;
+                }
 
-              const concreteLines = value
-                .split("\n")
-                .map((line) => line.trim())
-                .filter((line) => line !== "" && !/^- \[ \] \.\.\.$/.test(line));
+                const concreteLines = value
+                  .split("\n")
+                  .map((line) => line.trim())
+                  .filter((line) => line !== "" && !/^- \[ \] \.\.\.$/.test(line));
 
-              return concreteLines.length > 0;
+                return concreteLines.length > 0;
+              });
             };
 
             const missingByType = {
