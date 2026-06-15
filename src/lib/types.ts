@@ -623,16 +623,6 @@ export type ChutesResult =
     }
   | QuotaError
   | null;
-export type CrofResult =
-  | {
-      success: true;
-      credits: number;
-      requestsPlan: number;
-      usableRequests: number;
-      percentRemaining: number;
-    }
-  | QuotaError
-  | null;
 export interface SyntheticQuotaWindow {
   limit: number;
   used: number;

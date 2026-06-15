@@ -70,15 +70,6 @@ describe("provider-metadata", () => {
         quota: "remote_api",
       },
       {
-        id: "crof",
-        autoSetup: "manual_env_config",
-        authentication: "external_api_key",
-        authFallbacks: ["env_api_key", "global_opencode_config"],
-        quota: "remote_api",
-        notes:
-          "Requires CROF_API_KEY, CROFAI_API_KEY, or trusted user/global config; not available through OpenCode /connect",
-      },
-      {
         id: "google-antigravity",
         autoSetup: "needs_quick_setup",
         authentication: "companion_auth_oauth_token",
@@ -184,7 +175,6 @@ describe("provider-metadata", () => {
     expect(QUOTA_PROVIDER_RUNTIME_IDS.cursor).toEqual(["cursor", "cursor-acp"]);
     expect(QUOTA_PROVIDER_RUNTIME_IDS.synthetic).toEqual(["synthetic"]);
     expect(QUOTA_PROVIDER_RUNTIME_IDS.chutes).toEqual(["chutes", "chutes-ai"]);
-    expect(QUOTA_PROVIDER_RUNTIME_IDS.crof).toEqual(["crof"]);
     expect(QUOTA_PROVIDER_RUNTIME_IDS["google-antigravity"]).toEqual([
       "google-antigravity",
       "google",

@@ -7,7 +7,6 @@ export type CanonicalQuotaProviderId =
   | "alibaba-coding-plan"
   | "synthetic"
   | "chutes"
-  | "crof"
   | "google-antigravity"
   | "google-gemini-cli"
   | "zai"
@@ -59,7 +58,6 @@ export const QUOTA_PROVIDER_LABELS: Readonly<Record<string, string>> = {
   "google-gemini-cli": "Gemini CLI",
   synthetic: "Synthetic",
   chutes: "Chutes",
-  crof: "Crof",
   cursor: "Cursor",
   "qwen-code": "Qwen",
   "alibaba-coding-plan": "Alibaba Coding Plan",
@@ -115,7 +113,6 @@ export const QUOTA_PROVIDER_RUNTIME_IDS: QuotaProviderRuntimeIds = {
   "alibaba-coding-plan": ["alibaba-coding-plan"],
   synthetic: ["synthetic"],
   chutes: ["chutes", "chutes-ai"],
-  crof: ["crof"],
   "google-antigravity": ["google-antigravity", "google", "antigravity"],
   "google-gemini-cli": [
     "google-gemini-cli",
@@ -202,15 +199,6 @@ export const QUOTA_PROVIDER_SHAPES: readonly QuotaProviderShape[] = [
     authentication: "opencode_auth_api_key",
     authFallbacks: ["env_api_key", "global_opencode_config"],
     quota: "remote_api",
-  },
-  {
-    id: "crof",
-    autoSetup: "manual_env_config",
-    authentication: "external_api_key",
-    authFallbacks: ["env_api_key", "global_opencode_config"],
-    quota: "remote_api",
-    notes:
-      "Requires CROF_API_KEY, CROFAI_API_KEY, or trusted user/global config; not available through OpenCode /connect",
   },
   {
     id: "google-antigravity",

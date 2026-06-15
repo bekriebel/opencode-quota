@@ -213,7 +213,6 @@ Most providers work automatically. If a provider has a “Needs setup” link, o
 | MiniMax Coding Plan (CN) | OpenCode config | Remote API | Usage/quota |
 | Kimi Code | OpenCode config | Remote API | Usage/quota |
 | Chutes AI | API key/config | Remote API | Usage/quota |
-| Crof.ai | Manual env/config/auth | Remote API | Usage/quota |
 | Synthetic | Automatic | Remote API | Quota |
 | Google Antigravity | [Needs setup](#google-antigravity) | Remote API | Usage/quota |
 | Gemini CLI | [Needs setup](#gemini-cli) | Remote API | Usage/quota |
@@ -661,7 +660,7 @@ Run `/quota_status` and check the Alibaba auth, resolved tier, state-file path, 
 </details>
 
 <details>
-<summary><strong>MiniMax, Kimi, Chutes AI, Crof.ai, Synthetic, Z.ai, Zhipu, NanoGPT, and DeepSeek</strong></summary>
+<summary><strong>MiniMax, Kimi, Chutes AI, Synthetic, Z.ai, Zhipu, NanoGPT, and DeepSeek</strong></summary>
 
 These providers use trusted env vars, trusted user/global OpenCode config, or native OpenCode auth. Run `/quota_status` and check the provider-specific API-key diagnostics.
 
@@ -671,7 +670,6 @@ These providers use trusted env vars, trusted user/global OpenCode config, or na
 | MiniMax Coding Plan (CN) | Use `MINIMAX_CHINA_CODING_PLAN_API_KEY` or trusted user/global OpenCode config under `minimax-china-coding-plan`, `minimax-cn-coding-plan`, `minimax-cn`, or `minimax-china`. Runtime id `minimax-cn-coding-plan` uses this provider. |
 | Kimi Code | Use `KIMI_API_KEY` or `KIMI_CODE_API_KEY`; repo-local provider secrets are ignored. |
 | Chutes AI | Use `CHUTES_API_KEY`, trusted user/global config, or OpenCode auth. |
-| Crof.ai | Use `CROF_API_KEY`, `CROFAI_API_KEY`, trusted user/global config, or OpenCode auth. |
 | Synthetic | Use `SYNTHETIC_API_KEY`, trusted user/global config, or OpenCode auth. |
 | Z.ai Coding Plan | Use `ZAI_API_KEY` or `ZAI_CODING_PLAN_API_KEY`; malformed fallback auth is surfaced as an auth error. |
 | Zhipu Coding Plan | Use `ZHIPU_API_KEY` or `ZHIPU_CODING_PLAN_API_KEY`; malformed fallback auth is surfaced as an auth error. |
