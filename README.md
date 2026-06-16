@@ -394,7 +394,7 @@ Existing `experimental.quotaToast` settings still work when no sidecar file exis
 | `enabledProviders` | `"auto"` | Auto-detect providers, or set an explicit provider list. |
 | `minIntervalMs` | `300000` | Minimum fetch interval between provider updates. |
 | `requestTimeoutMs` | `5000` | Remote provider request timeout in milliseconds. |
-| `formatStyle` | `singleWindow` | Shared quota reset-period display for popup toasts and the Sidebar panel: `singleWindow` shows one reset period per provider; `allWindows` shows all reset periods per provider. Legacy `classic`/`grouped` aliases are still accepted. |
+| `formatStyle` | `singleWindow` | Shared quota reset-period display for popup toasts, the Sidebar panel, and Compact status line unless a TUI surface override is set: `singleWindow` shows one reset period per provider; `allWindows` shows all reset periods per provider. Legacy `classic`/`grouped` aliases are still accepted. |
 | `percentDisplayMode` | `remaining` | Shared quota percentage meaning for popup toasts, the Sidebar panel, and `/quota` when the TUI plugin is installed: `remaining` shows quota left; `used` shows quota consumed. |
 | `onlyCurrentModel` | `false` | Filter quota rows to the current model/provider when that session selection can be resolved. |
 | `showSessionTokens` | `true` | Show the `Session input/output tokens` section when session token data is available. When cached input is present, the section keeps the legacy `in/out` layout and appends cached input in parentheses next to the input amount. |
@@ -421,11 +421,13 @@ Existing `experimental.quotaToast` settings still work when no sidecar file exis
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `tuiSidebarPanel.enabled` | `true` | Show the Sidebar `Quota` panel when the TUI plugin is installed. Click the panel header to toggle between compact summary and detailed all-windows views; OpenCode remembers the last state. |
+| `tuiSidebarPanel.formatStyle` | (root `formatStyle`) | Override `formatStyle` for the Sidebar panel only. Useful when you want `allWindows` detail in the sidebar but a different style elsewhere. |
 | `tuiCompactStatus.enabled` | `false` | Opt in to Compact status line UI surfaces. |
 | `tuiCompactStatus.homeBottom` | `true` | Show the Compact status line at the home bottom location. |
 | `tuiCompactStatus.sessionPrompt` | `true` | Show the Compact status line by wrapping the TUI session prompt. Disable this if you only want the home-bottom line. |
 | `tuiCompactStatus.suppressWhenNativeProviderQuota` | `true` | Hide the Compact status line when OpenCode exposes native provider-quota support. |
 | `tuiCompactStatus.maxWidth` | `96` | Maximum Compact status line text width. |
+| `tuiCompactStatus.formatStyle` | (root `formatStyle`) | Override `formatStyle` for the Compact status line only. Useful when you want `singleWindow` on the compact line while the sidebar shows `allWindows`. |
 
 ### Maintainer announcement settings
 

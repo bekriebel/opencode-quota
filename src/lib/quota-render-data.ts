@@ -101,6 +101,8 @@ export type CollectQuotaRenderDataResult = {
   hasExplicitProviderIssues: boolean;
   data: QuotaRenderData | null;
   allWindowsData?: QuotaRenderData | null;
+  /** Pre-computed singleWindow-projected data. Only present when includeAllWindowsData=true and root style is allWindows. */
+  singleWindowData?: QuotaRenderData | null;
   sessionTokenError?: SessionTokenError;
 };
 
@@ -659,15 +661,26 @@ export async function collectQuotaRenderData(params: {
       : { entries, errors, sessionTokens };
 
   let allWindowsData: QuotaRenderData | null | undefined;
+  let singleWindowData: QuotaRenderData | null | undefined;
   if (params.includeAllWindowsData) {
     const allWindowsEntries = (style === "allWindows")
-      ? entries
+        ? entries
       : results.flatMap((result) =>
-          projectProviderResultToStyle(result, "allWindows"),
+            projectProviderResultToStyle(result, "allWindows"),
         ) as QuotaToastEntry[];
     allWindowsData = (allWindowsEntries.length === 0 && errors.length === 0 && !sessionTokens)
-      ? null
-      : { entries: allWindowsEntries, errors: [...errors], sessionTokens };
+        ? null
+        : { entries: allWindowsEntries, errors: [...errors], sessionTokens };
+
+    if (style === "allWindows") {
+      const singleWindowEntries = results.flatMap((result) =>
+        projectProviderResultToStyle(result, "singleWindow"),
+      ) as QuotaToastEntry[];
+      singleWindowData =
+        singleWindowEntries.length === 0 && errors.length === 0 && !sessionTokens
+          ? null
+          : { entries: singleWindowEntries, errors: [...errors], sessionTokens };
+    }
   }
 
   return {
@@ -678,6 +691,7 @@ export async function collectQuotaRenderData(params: {
     hasExplicitProviderIssues,
     data,
     allWindowsData,
+    singleWindowData,
     sessionTokenError,
   };
 }

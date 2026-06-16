@@ -54,11 +54,13 @@ export const QUOTA_TOAST_SETTING_SOURCE_KEYS = [
   "onlyCurrentModel",
   "showSessionTokens",
   "tuiSidebarPanel.enabled",
+  "tuiSidebarPanel.formatStyle",
   "tuiCompactStatus.enabled",
   "tuiCompactStatus.homeBottom",
   "tuiCompactStatus.sessionPrompt",
   "tuiCompactStatus.suppressWhenNativeProviderQuota",
   "tuiCompactStatus.maxWidth",
+  "tuiCompactStatus.formatStyle",
   "maintainerAnnouncements.enabled",
   "maintainerAnnouncements.home",
   "layout.maxWidth",
@@ -236,18 +238,26 @@ function normalizeOptionalString(value: unknown): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
-function getConfiguredFormatStyle(
-  quotaToastConfig: Partial<QuotaToastConfig> | undefined | null,
+function getExplicitFormatStyle(
+  config: { formatStyle?: unknown } | undefined | null,
 ): QuotaToastConfig["formatStyle"] | undefined {
-  if (!quotaToastConfig) {
+  if (!config || !isQuotaFormatStyle(config.formatStyle)) {
     return undefined;
   }
 
-  if (isQuotaFormatStyle(quotaToastConfig.formatStyle)) {
-    return resolveQuotaFormatStyle(quotaToastConfig.formatStyle);
+  return resolveQuotaFormatStyle(config.formatStyle);
+}
+
+function getConfiguredFormatStyle(
+  quotaToastConfig: Partial<QuotaToastConfig> | undefined | null,
+): QuotaToastConfig["formatStyle"] | undefined {
+  const formatStyle = getExplicitFormatStyle(quotaToastConfig);
+  if (formatStyle) {
+    return formatStyle;
   }
 
-  const legacyFormatStyle = (quotaToastConfig as { toastStyle?: unknown }).toastStyle;
+  const legacyFormatStyle = (quotaToastConfig as { toastStyle?: unknown } | undefined | null)
+    ?.toastStyle;
   if (isQuotaFormatStyle(legacyFormatStyle)) {
     return resolveQuotaFormatStyle(legacyFormatStyle);
   }
@@ -377,6 +387,11 @@ function extractTuiSidebarPanelPatch(value: unknown): TuiSidebarPanelPatch | und
     patch.enabled = value.enabled;
   }
 
+  const sidebarFormatStyle = getExplicitFormatStyle(value);
+  if (sidebarFormatStyle) {
+    patch.formatStyle = sidebarFormatStyle;
+  }
+
   return Object.keys(patch).length > 0 ? patch : undefined;
 }
 
@@ -408,6 +423,11 @@ function extractTuiCompactStatusPatch(value: unknown): TuiCompactStatusPatch | u
 
   if (hasOwnKey(value, "maxWidth") && isPositiveNumber(value.maxWidth)) {
     patch.maxWidth = value.maxWidth;
+  }
+
+  const compactFormatStyle = getExplicitFormatStyle(value);
+  if (compactFormatStyle) {
+    patch.formatStyle = compactFormatStyle;
   }
 
   return Object.keys(patch).length > 0 ? patch : undefined;
@@ -812,6 +832,11 @@ function applyValidatedQuotaToastPatch(
       config.tuiSidebarPanel.enabled = patch.tuiSidebarPanel.enabled!;
       applySettingSource(settingSources, "tuiSidebarPanel.enabled", sourcePath);
     }
+
+    if (hasOwnKey(patch.tuiSidebarPanel, "formatStyle")) {
+      config.tuiSidebarPanel.formatStyle = patch.tuiSidebarPanel.formatStyle!;
+      applySettingSource(settingSources, "tuiSidebarPanel.formatStyle", sourcePath);
+    }
   }
 
   if (patch.tuiCompactStatus) {
@@ -843,6 +868,11 @@ function applyValidatedQuotaToastPatch(
     if (hasOwnKey(patch.tuiCompactStatus, "maxWidth")) {
       config.tuiCompactStatus.maxWidth = patch.tuiCompactStatus.maxWidth!;
       applySettingSource(settingSources, "tuiCompactStatus.maxWidth", sourcePath);
+    }
+
+    if (hasOwnKey(patch.tuiCompactStatus, "formatStyle")) {
+      config.tuiCompactStatus.formatStyle = patch.tuiCompactStatus.formatStyle!;
+      applySettingSource(settingSources, "tuiCompactStatus.formatStyle", sourcePath);
     }
   }
 

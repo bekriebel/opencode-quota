@@ -29,6 +29,8 @@ export interface PricingSnapshotConfig {
 
 export interface TuiSidebarPanelConfig {
   enabled: boolean;
+  /** Per-surface formatStyle override. Falls back to root formatStyle when absent. */
+  formatStyle?: QuotaFormatStyle;
 }
 
 export interface TuiCompactStatusConfig {
@@ -37,6 +39,8 @@ export interface TuiCompactStatusConfig {
   sessionPrompt: boolean;
   suppressWhenNativeProviderQuota: boolean;
   maxWidth: number;
+  /** Per-surface formatStyle override. Falls back to root formatStyle when absent. */
+  formatStyle?: QuotaFormatStyle;
 }
 
 export interface QuotaExportConfig {
