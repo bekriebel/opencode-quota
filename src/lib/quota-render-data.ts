@@ -144,7 +144,7 @@ export function matchesQuotaProviderCurrentSelection(params: {
   currentProviderID?: string;
   enabledProviders?: string[] | "auto";
 }): boolean {
-  if (!params.currentModel && params.currentProviderID) {
+  if (params.currentProviderID) {
     const normalizedCurrentProviderID = normalizeQuotaProviderId(params.currentProviderID);
     if (params.provider.id === normalizedCurrentProviderID) {
       return true;

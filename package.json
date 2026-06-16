@@ -33,7 +33,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc && node scripts/copy-data.mjs && node scripts/prepare-tui-dist.mjs",
+    "build": "node scripts/clean-dist.mjs && tsc && node scripts/copy-data.mjs && node scripts/prepare-tui-dist.mjs",
     "build:check": "pnpm run build && pnpm pack --dry-run",
     "pricing:refresh": "node scripts/refresh-modelsdev-pricing.mjs",
     "pricing:refresh:if-stale": "node scripts/refresh-modelsdev-pricing-if-stale.mjs",

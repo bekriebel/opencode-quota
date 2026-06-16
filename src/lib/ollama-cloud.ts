@@ -18,7 +18,7 @@ const SCRAPE_TIMEOUT_MS = 10_000;
 
 const USAGE_PERCENT_RE = /(\d+(?:\.\d+)?)%\s*used/;
 const WIDTH_PERCENT_RE = /(?:^|;)\s*width\s*:\s*([0-9.]+)%/;
-const DATA_USAGE_TRACK_RE = /data-usage-track[^>]*aria-label="([^"]*)"/gs;
+const DATA_USAGE_TRACK_RE = /<[^>]*\bdata-usage-track\b[^>]*>/gs;
 const LOCAL_TIME_RE = /class="[^"]*local-time[^"]*"[^>]*data-time="([^"]*)"/gs;
 const PLAN_TIER_RE = /class="[^"]*capitalize[^"]*"[^>]*>([^<]*)</;
 
@@ -131,15 +131,15 @@ export async function queryOllamaCloudQuota(
       tracks.push(trackMatch[0]);
     }
 
-    if (tracks.length < 2) {
+    if (tracks.length === 0) {
       return {
         success: false,
-        error: `Could not parse usage tracks from Ollama Cloud settings page (found ${tracks.length}, need at least 2)`,
+        error: "Could not parse usage tracks from Ollama Cloud settings page (found 0)",
       };
     }
 
-    const sessionPercent = extractUsagePercentFromTrack(tracks[0]);
-    const weeklyPercent = extractUsagePercentFromTrack(tracks[1]);
+    const sessionPercent = tracks[0] ? extractUsagePercentFromTrack(tracks[0]) : null;
+    const weeklyPercent = tracks[1] ? extractUsagePercentFromTrack(tracks[1]) : null;
 
     if (sessionPercent === null && weeklyPercent === null) {
       return {

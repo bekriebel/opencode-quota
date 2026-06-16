@@ -81,8 +81,12 @@ function parseWindowUsage(
  * Parse human-readable time strings like "1 hour 56 minutes", "6 days 2 hours", "26 days 17 hours"
  * into seconds.
  */
-function parseHumanReadableTime(timeStr: string): number {
-  const normalized = timeStr.toLowerCase().trim();
+function parseHumanReadableTime(timeStr: string): number | null {
+  const normalized = timeStr.toLowerCase().trim().replace(/\s+/g, " ");
+  if (["reset-now", "reset now", "now", "resets now"].includes(normalized)) {
+    return 0;
+  }
+
   let totalSeconds = 0;
 
   // Match patterns like "X days", "X hours", "X minutes", "X seconds"
@@ -90,13 +94,14 @@ function parseHumanReadableTime(timeStr: string): number {
   const hourMatch = normalized.match(/(\d+(?:\.\d+)?)\s*hours?/);
   const minuteMatch = normalized.match(/(\d+(?:\.\d+)?)\s*minutes?/);
   const secondMatch = normalized.match(/(\d+(?:\.\d+)?)\s*seconds?/);
+  const hasDuration = Boolean(dayMatch || hourMatch || minuteMatch || secondMatch);
 
   if (dayMatch) totalSeconds += Number(dayMatch[1]) * 86400;
   if (hourMatch) totalSeconds += Number(hourMatch[1]) * 3600;
   if (minuteMatch) totalSeconds += Number(minuteMatch[1]) * 60;
   if (secondMatch) totalSeconds += Number(secondMatch[1]);
 
-  return totalSeconds;
+  return hasDuration ? totalSeconds : null;
 }
 
 /**
@@ -122,20 +127,20 @@ function parseDataSlotFormat(html: string): Partial<Record<string, ScrapedWindow
     if (!usageMatch) continue;
     const usagePercent = Number(usageMatch[1]);
 
-    // Extract reset time - get content between reset-time"> and </span>
-    const resetMatch = content.match(/data-slot="reset-time">([\s\S]*?)<\/span>/);
+    // Extract reset time - get content between reset-time/reset-now and </span>
+    const resetMatch = content.match(/data-slot="(reset-time|reset-now)">([\s\S]*?)<\/span>/);
     if (!resetMatch) continue;
 
     // Clean up SolidJS comments and "Resets in" prefix
-    const resetContent = resetMatch[1]
+    const resetContent = resetMatch[2]
       .replace(/<!--\$-->/g, "")
       .replace(/<!--\/-->/g, "")
       .replace(/Resets?\s*in\s*/i, "")
       .trim();
 
-    const resetInSec = parseHumanReadableTime(resetContent);
+    const resetInSec = resetMatch[1] === "reset-now" ? 0 : parseHumanReadableTime(resetContent);
 
-    if (!Number.isFinite(usagePercent) || !Number.isFinite(resetInSec) || resetInSec === 0) continue;
+    if (!Number.isFinite(usagePercent) || resetInSec === null || !Number.isFinite(resetInSec)) continue;
 
     // Map label to window key
     let windowKey: string | null = null;

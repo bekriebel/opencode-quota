@@ -455,6 +455,27 @@ describe("opencode-go provider", () => {
     });
   });
 
+  it("parses data-slot reset-now as a valid zero-second reset", async () => {
+    mockConfigConfigured();
+    mockDashboardSuccess(`<div data-slot="usage">
+      <div data-slot="usage-item">
+        <span data-slot="usage-label">Rolling Usage</span>
+        <span data-slot="usage-value"><!--$-->12<!--/-->%</span>
+        <span data-slot="reset-now"><!--$-->reset-now<!--/--></span>
+      </div>
+    </div>`);
+
+    const out = await runProviderFetch();
+
+    expectAttemptedWithNoErrors(out);
+    expect(out.entries).toHaveLength(1);
+    expect(out.entries[0]).toMatchObject({
+      name: "OpenCode Go 5h",
+      percentRemaining: 88,
+    });
+    expect(out.entries[0]).toHaveProperty("resetTimeIso");
+  });
+
   it("prefers SolidJS SSR format when both formats are present", async () => {
     mockConfigConfigured();
     // HTML with both SolidJS SSR and data-slot formats
@@ -611,6 +632,30 @@ describe("_parseDataSlotFormat", () => {
     const result = _parseDataSlotFormat(html);
 
     expect(result.monthly).toEqual({ usagePercent: 66.5, resetInSec: 2246400 });
+  });
+
+  it("parses reset-now slots as zero seconds", () => {
+    const html = `<div data-slot="usage">
+      <div data-slot="usage-item">
+        <span data-slot="usage-label">Rolling Usage</span>
+        <span data-slot="usage-value"><!--$-->5<!--/-->%</span>
+        <span data-slot="reset-now"><!--$-->reset-now<!--/--></span>
+      </div>
+    </div>`;
+
+    expect(_parseDataSlotFormat(html).rolling).toEqual({ usagePercent: 5, resetInSec: 0 });
+  });
+
+  it("parses reset-time reset-now text as zero seconds", () => {
+    const html = `<div data-slot="usage">
+      <div data-slot="usage-item">
+        <span data-slot="usage-label">Weekly Usage</span>
+        <span data-slot="usage-value"><!--$-->10<!--/-->%</span>
+        <span data-slot="reset-time"><!--$-->reset-now<!--/--></span>
+      </div>
+    </div>`;
+
+    expect(_parseDataSlotFormat(html).weekly).toEqual({ usagePercent: 10, resetInSec: 0 });
   });
 
   it("handles various time formats", () => {

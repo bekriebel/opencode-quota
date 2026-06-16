@@ -114,6 +114,67 @@ describe("queryOllamaCloudQuota", () => {
     });
   });
 
+  it("returns session usage when only one valid usage track is present", async () => {
+    mockResponse({
+      ok: true,
+      status: 200,
+      text: `<div data-usage-track aria-label="25% used"></div>
+        <span class="local-time" data-time="2026-06-14T10:00:00.000Z"></span>`,
+    });
+
+    const out = await queryOllamaCloudQuota("cookie");
+
+    expect(out).toEqual({
+      success: true,
+      session: {
+        usagePercent: 25,
+        percentRemaining: 75,
+        resetTimeIso: "2026-06-14T10:00:00.000Z",
+      },
+    });
+  });
+
+  it("returns weekly usage when the first usage track is invalid and the second is valid", async () => {
+    mockResponse({
+      ok: true,
+      status: 200,
+      text: `<div data-usage-track aria-label="session"></div>
+        <span class="local-time" data-time="2026-06-14T10:00:00.000Z"></span>
+        <div data-usage-track aria-label="40% used"></div>
+        <span class="local-time" data-time="2026-06-21T10:00:00.000Z"></span>`,
+    });
+
+    const out = await queryOllamaCloudQuota("cookie");
+
+    expect(out).toEqual({
+      success: true,
+      weekly: {
+        usagePercent: 40,
+        percentRemaining: 60,
+        resetTimeIso: "2026-06-21T10:00:00.000Z",
+      },
+    });
+  });
+
+  it("parses style-only usage tracks without aria labels", async () => {
+    mockResponse({
+      ok: true,
+      status: 200,
+      text: '<div data-usage-track style="width: 33%"></div>',
+    });
+
+    const out = await queryOllamaCloudQuota("cookie");
+
+    expect(out).toEqual({
+      success: true,
+      session: {
+        usagePercent: 33,
+        percentRemaining: 67,
+        resetTimeIso: undefined,
+      },
+    });
+  });
+
   it("reports redirects as expired or invalid cookie authentication errors", async () => {
     mockResponse({
       ok: false,
@@ -145,7 +206,7 @@ describe("queryOllamaCloudQuota", () => {
     const out = await queryOllamaCloudQuota("cookie");
 
     expect(out && !out.success ? out.error : "").toBe(
-      "Could not parse usage tracks from Ollama Cloud settings page (found 0, need at least 2)",
+      "Could not parse usage tracks from Ollama Cloud settings page (found 0)",
     );
   });
 

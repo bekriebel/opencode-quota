@@ -35,7 +35,7 @@ The installer adds missing plugin/config entries and keeps your unrelated settin
 | Question | Pick this when you want... |
 | --- | --- |
 | Install scope | This repo/worktree only, or your global OpenCode config. |
-| Quota UI | Sidebar panel, toasts, compact status line, terminal/slash-command only, or a mix. |
+| Quota UI | Sidebar panel, toasts, compact status line, terminal command only, or a mix. Sidebar or Compact status installs the TUI plugin for slash-command dialogs. |
 | Provider mode | Auto-detect providers, or choose a provider list yourself. |
 | Quota reset periods | Show one reset period per provider, or all known reset periods. |
 | Quota percentage meaning | Show quota remaining, or quota already used. |
@@ -45,9 +45,9 @@ The installer adds missing plugin/config entries and keeps your unrelated settin
 ### After install
 
 1. Restart OpenCode.
-2. Run `/quota`.
-3. If something looks wrong, run `/quota_status`.
-4. If you kept maintainer announcements enabled and installed the TUI plugin, the home screen can show `Notice: Maintainer announcement available. Run /quota_announcements.` or the plural count form. Without the TUI plugin, the same count-only notice can appear once after the first visible quota toast. Run `/quota_announcements` to read active notices.
+2. If you selected Sidebar or Compact status, run `/quota`. If you selected Toast-only or Terminal command only, use `opencode-quota show` or add the TUI plugin manually for slash commands.
+3. If something looks wrong and the TUI plugin is installed, run `/quota_status`; otherwise run `opencode-quota show` from your terminal.
+4. If you kept maintainer announcements enabled and installed the TUI plugin, the home screen can show `Notice: Maintainer announcement available. Run /quota_announcements.` or the plural count form. Without the TUI plugin, the same count-only notice can appear once after the first visible quota toast. Run `/quota_announcements` to read active notices when the TUI plugin is installed.
 5. If you enabled the Sidebar panel, open the session sidebar and look for `Quota`.
 6. If you enabled Compact status line, look for the home-bottom quota line and the chat/session prompt quota line.
 
@@ -70,8 +70,8 @@ opencode-quota show --provider copilot
 - A `Quota` Sidebar panel in the TUI
 - Popup quota toasts in OpenCode
 - A Compact status line in the TUI
-- `/quota`, `/quota_status`, and `/quota_announcements` slash commands
-- Token reports such as `/tokens_today` and `/tokens_weekly`
+- `/quota`, `/quota_status`, and `/quota_announcements` slash commands when the TUI plugin is installed
+- Token reports such as `/tokens_today` and `/tokens_weekly` when the TUI plugin is installed
 - Provider diagnostics for auth, quota sources, pricing, and bundled maintainer announcements
 
 <table>
@@ -97,7 +97,7 @@ opencode-quota show --provider copilot
   </tr>
   <tr>
     <td width="50%" align="center">Compact status line</td>
-    <td width="50%" align="center"><code>/tokens_weekly</code> report</td>
+    <td width="50%" align="center"><code>/tokens_weekly</code> TUI report</td>
   </tr>
 </table>
 
@@ -159,7 +159,7 @@ Start with this, then adjust the UI choices in the next section:
 ```
 
 > [!TIP]
-> Run `/quota_status` to see the exact config paths OpenCode Quota loaded.
+> When the TUI plugin is installed, run `/quota_status` to see the exact config paths OpenCode Quota loaded.
 
 ## Choose your UI surfaces
 
@@ -172,7 +172,7 @@ All UI surfaces use the same quota data. Put these settings in `opencode-quota/q
 | Compact status line | `tuiCompactStatus.enabled: true` | Short text-only quota line at the home bottom and chat/session prompt locations, for example `Copilot 94% | OpenAI Pro 5h 100%, 7d 100%`. Requires the TUI plugin entry above. |
 | Maintainer announcement notice | `maintainerAnnouncements.enabled: true`, `maintainerAnnouncements.home: true` | Prefers the TUI home notice when the quota TUI plugin is configured. Without the TUI plugin, shows the same count-only notice once after the first visible quota toast. |
 | Dialog slash commands | TUI plugin entry in `tui.json` | `/quota`, `/quota_status`, `/quota_announcements`, `/pricing_refresh`, and `/tokens_*` open local TUI dialogs. They do not call the model and do not write command output to the OpenCode session transcript. |
-| Terminal only | `enableToast: false`, `tuiSidebarPanel.enabled: false`, `tuiCompactStatus.enabled: false`, `maintainerAnnouncements.enabled: false` | Keeps terminal checks while hiding optional toast/sidebar/compact/home surfaces. |
+| Terminal command only | `enableToast: false`, `tuiSidebarPanel.enabled: false`, `tuiCompactStatus.enabled: false`, `maintainerAnnouncements.enabled: false` | Keeps `opencode-quota show` terminal checks while hiding optional toast/sidebar/compact/home surfaces. Does not install TUI slash-command dialogs. |
 
 Selecting Compact status line in the installer enables both compact surfaces by default. To keep compact status home-only, set `tuiCompactStatus.sessionPrompt: false`.
 
@@ -182,7 +182,7 @@ For more examples, see [Common configuration](#common-configuration). For every 
 
 ## Commands
 
-Slash commands require the TUI plugin entry in `tui.json` and open deterministic local dialogs. They do not invoke a model and do not write command output into the OpenCode session transcript. Session-scoped token commands require an active TUI session.
+Slash commands require the TUI plugin entry in `tui.json` and open deterministic local dialogs. The installer adds that entry only when you select Sidebar or Compact status. They do not invoke a model and do not write command output into the OpenCode session transcript. Session-scoped token commands require an active TUI session.
 
 | Command | What it shows |
 | --- | --- |
@@ -236,11 +236,11 @@ Common locations:
 - Global install: usually `~/.config/opencode/opencode-quota/quota-toast.json`
 - Custom config dir: `$OPENCODE_CONFIG_DIR/opencode-quota/quota-toast.json`
 
-If you are unsure, run `/quota_status`; it prints the config path it loaded.
+If you are unsure and the TUI plugin is installed, run `/quota_status`; otherwise check the install-scope paths above.
 
 ### Maintainer announcements and privacy
 
-Announcements are bundled only: no remote fetches, announcement telemetry, or persisted dismiss state. Use `/quota_announcements` to read active notices and `/quota_status` for counts/diagnostics. See **Configure maintainer announcements** below for options.
+Announcements are bundled only: no remote fetches, announcement telemetry, or persisted dismiss state. When the TUI plugin is installed, use `/quota_announcements` to read active notices and `/quota_status` for counts/diagnostics. See **Configure maintainer announcements** below for options.
 
 <details>
 <summary><strong>Choose providers explicitly</strong></summary>
@@ -278,7 +278,7 @@ Announcements are bundled only: no remote fetches, announcement telemetry, or pe
 <details>
 <summary><strong>Turn off popup toasts</strong></summary>
 
-Keeps `/quota`, `/quota_status`, terminal checks, and any enabled UI surfaces.
+Keeps terminal checks, any enabled UI surfaces, and `/quota`/`/quota_status` when the TUI plugin is installed.
 
 ```jsonc
 {
@@ -300,14 +300,14 @@ Keeps `/quota`, `/quota_status`, terminal checks, and any enabled UI surfaces.
 }
 ```
 
-Set `enabled: false` to disable automatic announcement surfaces. `/quota_announcements` lists active bundled notices when announcements are enabled.
+Set `enabled: false` to disable automatic announcement surfaces. When the TUI plugin is installed, `/quota_announcements` lists active bundled notices while announcements are enabled.
 
 </details>
 
 <details>
 <summary><strong>Turn off the Sidebar panel</strong></summary>
 
-Useful when you want Compact status line only, toasts only, or slash commands only.
+Useful when you want Compact status line only, toasts only, or installed TUI slash dialogs without the Sidebar panel.
 
 ```jsonc
 {
@@ -373,22 +373,22 @@ Existing `experimental.quotaToast` settings still work when no sidecar file exis
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `enabled` | `true` | Master switch for quota collection and handled slash commands. When `false`, `/quota`, `/quota_status`, `/pricing_refresh`, and `/tokens_*` are handled as no-ops. |
+| `enabled` | `true` | Master switch for quota collection and handled slash commands when the TUI plugin is installed. When `false`, `/quota`, `/quota_status`, `/pricing_refresh`, and `/tokens_*` are handled as no-ops. |
 | `enabledProviders` | `"auto"` | Auto-detect providers, or set an explicit provider list. |
 | `minIntervalMs` | `300000` | Minimum fetch interval between provider updates. |
 | `requestTimeoutMs` | `5000` | Remote provider request timeout in milliseconds. |
 | `formatStyle` | `singleWindow` | Shared quota reset-period display for popup toasts and the Sidebar panel: `singleWindow` shows one reset period per provider; `allWindows` shows all reset periods per provider. Legacy `classic`/`grouped` aliases are still accepted. |
-| `percentDisplayMode` | `remaining` | Shared quota percentage meaning for popup toasts, the Sidebar panel, and `/quota`: `remaining` shows quota left; `used` shows quota consumed. |
+| `percentDisplayMode` | `remaining` | Shared quota percentage meaning for popup toasts, the Sidebar panel, and `/quota` when the TUI plugin is installed: `remaining` shows quota left; `used` shows quota consumed. |
 | `onlyCurrentModel` | `false` | Filter quota rows to the current model/provider when that session selection can be resolved. |
 | `showSessionTokens` | `true` | Show the `Session input/output tokens` section when session token data is available. When cached input is present, the section keeps the legacy `in/out` layout and appends cached input in parentheses next to the input amount. |
-| `pricingSnapshot.source` | `"auto"` | Token pricing snapshot selection for `/tokens_*`: `auto`, `bundled`, or `runtime`. |
+| `pricingSnapshot.source` | `"auto"` | Token pricing snapshot selection for `/tokens_*` when the TUI plugin is installed: `auto`, `bundled`, or `runtime`. |
 | `pricingSnapshot.autoRefresh` | `7` | Refresh stale local pricing data after this many days. |
 
 ### Toast settings
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `enableToast` | `true` | Show popup toasts. Disabling this does not disable `/quota` or UI surfaces. |
+| `enableToast` | `true` | Show popup toasts. Disabling this does not disable terminal checks, UI surfaces, or `/quota` when the TUI plugin is installed. |
 | `toastDurationMs` | `9000` | Toast duration in milliseconds. |
 | `showOnIdle` | `true` | Show a toast on the idle trigger. |
 | `showOnQuestion` | `true` | Show a toast after a question/assistant response. |
@@ -556,7 +556,7 @@ Use `opencodeGoWindows` to choose **5h**, **Weekly**, and/or **Monthly** windows
 
 Start here when quota or token data looks wrong.
 
-1. Run `/quota_status`.
+1. When the TUI plugin is installed, run `/quota_status`; otherwise start with `opencode-quota show` for a terminal quota summary.
 2. Confirm the expected provider appears in the detected provider list.
 3. Confirm companion auth plugins are before `@slkiser/opencode-quota` in `opencode.json`.
 4. If token reports are empty, start OpenCode once so it creates `opencode.db`, then run a session with model usage.
@@ -567,29 +567,29 @@ Start here when quota or token data looks wrong.
 | Symptom | Try this |
 | --- | --- |
 | `/quota` or other slash commands do not appear | Confirm `tui.json` includes `@slkiser/opencode-quota`, then restart OpenCode. |
-| `/quota` shows no providers | Run `/quota_status`, then check provider detection and auth. |
+| `/quota` shows no providers | Run `/quota_status` when the TUI plugin is installed, then check provider detection and auth. Without the TUI plugin, use `opencode-quota show` for a terminal quota summary. |
 | Sidebar panel does not appear | Confirm `tui.json` includes `@slkiser/opencode-quota`, restart OpenCode, and check `tuiSidebarPanel.enabled`. |
 | Compact status line does not appear anywhere | Confirm `tui.json` includes `@slkiser/opencode-quota`, restart OpenCode, check `tuiCompactStatus.enabled`, and check whether `tuiCompactStatus.suppressWhenNativeProviderQuota` is hiding it because OpenCode exposes native provider-quota support. |
 | Compact status appears on home but not in chat/session | Check `tuiCompactStatus.sessionPrompt`; set it to `true` to show the chat/session prompt line. |
 | Popup toasts do not appear | Check `enableToast`, `showOnIdle`, `showOnQuestion`, and `showOnCompact`. |
-| Announcement home notice does not appear | Confirm `tui.json` includes `@slkiser/opencode-quota`, restart OpenCode, then check `maintainerAnnouncements.enabled`, `maintainerAnnouncements.home`, and the active count in the `maintainer_announcements` section of `/quota_status`. |
+| Announcement home notice does not appear | Confirm `tui.json` includes `@slkiser/opencode-quota`, restart OpenCode, then check `maintainerAnnouncements.enabled`, `maintainerAnnouncements.home`, and, when the TUI plugin is installed, the active count in the `maintainer_announcements` section of `/quota_status`. |
 | Token reports are empty | Start OpenCode once so `opencode.db` exists, then run a session with model usage. |
-| Pricing looks stale | Run `/pricing_refresh`. |
-| `/tokens_between` needs dates | Run `/tokens_between YYYY-MM-DD YYYY-MM-DD`; if your OpenCode build does not pass slash arguments to TUI commands, the dialog shows the expected format. |
+| Pricing looks stale | Run `/pricing_refresh` when the TUI plugin is installed. |
+| `/tokens_between` needs dates | When the TUI plugin is installed, run `/tokens_between YYYY-MM-DD YYYY-MM-DD`; if your OpenCode build does not pass slash arguments to TUI commands, the dialog shows the expected format. |
 
 ### Provider troubleshooting
 
 <details>
 <summary><strong>Anthropic (Claude)</strong></summary>
 
-Run `/quota_status` and check the Anthropic section.
+When the TUI plugin is installed, run `/quota_status` and check the Anthropic section.
 
 | Symptom | Fix |
 | --- | --- |
 | `claude` not found | Install Claude Code and make sure `claude` is on your `PATH`. |
 | Claude is installed at a custom path | Set `anthropicBinaryPath` in `opencode-quota/quota-toast.json`. |
 | Not authenticated | Run `claude auth login`, then confirm `claude auth status` works. |
-| Auth works but no quota rows appear | Check `quota_source` and `message` in `/quota_status`; re-authenticate Claude if the OAuth credential fallback is missing or stale. |
+| Auth works but no quota rows appear | When the TUI plugin is installed, check `quota_source` and `message` in `/quota_status`; re-authenticate Claude if the OAuth credential fallback is missing or stale. |
 | Provider not detected | Confirm OpenCode is configured to use the `anthropic` provider. |
 
 </details>
@@ -597,7 +597,7 @@ Run `/quota_status` and check the Anthropic section.
 <details>
 <summary><strong>GitHub Copilot</strong></summary>
 
-Run `/quota_status` and check `copilot_quota_auth`, `billing_mode`, `billing_scope`, and `quota_api`.
+When the TUI plugin is installed, run `/quota_status` and check `copilot_quota_auth`, `billing_mode`, `billing_scope`, and `quota_api`.
 
 | Symptom | Fix |
 | --- | --- |
@@ -611,7 +611,7 @@ Run `/quota_status` and check `copilot_quota_auth`, `billing_mode`, `billing_sco
 <details>
 <summary><strong>OpenAI</strong></summary>
 
-Run `/quota_status` and check the OpenAI auth source and token status.
+When the TUI plugin is installed, run `/quota_status` and check the OpenAI auth source and token status.
 
 | Symptom | Fix |
 | --- | --- |
@@ -624,7 +624,7 @@ Run `/quota_status` and check the OpenAI auth source and token status.
 <details>
 <summary><strong>Cursor</strong></summary>
 
-Run `/quota_status` and check the Cursor section.
+When the TUI plugin is installed, run `/quota_status` and check the Cursor section.
 
 | Symptom | Fix |
 | --- | --- |
@@ -632,42 +632,42 @@ Run `/quota_status` and check the Cursor section.
 | Cursor auth missing | Run `opencode auth login --provider cursor`. |
 | Quota appears but no remaining percentage | Set `cursorPlan` or `cursorIncludedApiUsd` in `opencode-quota/quota-toast.json`. |
 | Billing cycle looks wrong | Set `cursorBillingCycleStartDay` in `opencode-quota/quota-toast.json` to your local billing anchor day. |
-| Unknown Cursor pricing | Run `/pricing_refresh`; if still unknown, check `/quota_status` for unknown model ids. |
+| Unknown Cursor pricing | Run `/pricing_refresh` when the TUI plugin is installed; if still unknown, check `/quota_status` for unknown model ids. |
 
 </details>
 
 <details>
 <summary><strong>Qwen Code</strong></summary>
 
-Run `/quota_status` and check `qwen_oauth_source`, `qwen_local_plan`, and the `qwen_code` live probe section.
+When the TUI plugin is installed, run `/quota_status` and check `qwen_oauth_source`, `qwen_local_plan`, and the `qwen_code` live probe section.
 
 | Symptom | Fix |
 | --- | --- |
 | Qwen not detected | Put `opencode-qwencode-auth` before `@slkiser/opencode-quota` in `opencode.json`. |
 | Auth missing | Complete the Qwen companion plugin auth flow. |
 | Counters do not move | Confirm the current model is `qwen-code/*`; Qwen quota is local request estimation for matching model usage. |
-| Usage looks stale | Check the local state file path shown by `/quota_status`. |
+| Usage looks stale | When the TUI plugin is installed, check the local state file path shown by `/quota_status`. |
 
 </details>
 
 <details>
 <summary><strong>Alibaba Coding Plan</strong></summary>
 
-Run `/quota_status` and check the Alibaba auth, resolved tier, state-file path, and `alibaba_coding_plan` live probe section.
+When the TUI plugin is installed, run `/quota_status` and check the Alibaba auth, resolved tier, state-file path, and `alibaba_coding_plan` live probe section.
 
 | Symptom | Fix |
 | --- | --- |
 | API key not detected | Use `ALIBABA_CODING_PLAN_API_KEY`, `ALIBABA_API_KEY`, trusted user/global OpenCode config, or OpenCode auth. Repo-local provider secrets are ignored. |
 | Wrong tier | Set `alibabaCodingPlanTier` to `lite` or `pro` in `opencode-quota/quota-toast.json`. |
 | Counters do not move | Confirm the current model is `alibaba/*` or `alibaba-cn/*`. |
-| Quota seems stale | Check the state-file path shown in `/quota_status`. |
+| Quota seems stale | When the TUI plugin is installed, check the state-file path shown in `/quota_status`. |
 
 </details>
 
 <details>
 <summary><strong>MiniMax, Kimi, Chutes AI, Synthetic, Z.ai, Zhipu, NanoGPT, and DeepSeek</strong></summary>
 
-These providers use trusted env vars, trusted user/global OpenCode config, or native OpenCode auth. Run `/quota_status` and check the provider-specific API-key diagnostics.
+These providers use trusted env vars, trusted user/global OpenCode config, or native OpenCode auth. When the TUI plugin is installed, run `/quota_status` and check the provider-specific API-key diagnostics.
 
 | Provider | Useful checks |
 | --- | --- |
@@ -688,21 +688,21 @@ For security, repo-local `opencode.json` / `opencode.jsonc` is ignored for provi
 <details>
 <summary><strong>Google Antigravity</strong></summary>
 
-Run `/quota_status` and check the `google_antigravity` section.
+When the TUI plugin is installed, run `/quota_status` and check the `google_antigravity` section.
 
 | Symptom | Fix |
 | --- | --- |
 | Companion missing | Put `opencode-antigravity-auth` before `@slkiser/opencode-quota` in `opencode.json`. |
-| Accounts not found | Check the selected `antigravity-accounts.json` path shown by `/quota_status`. |
+| Accounts not found | When the TUI plugin is installed, check the selected `antigravity-accounts.json` path shown by `/quota_status`. |
 | Refresh tokens invalid | Re-authenticate with the companion plugin. |
-| Provider returns no rows | Check `live_probe`, `live_entry_*`, and `live_error_*` in `/quota_status`. |
+| Provider returns no rows | When the TUI plugin is installed, check `live_probe`, `live_entry_*`, and `live_error_*` in `/quota_status`. |
 
 </details>
 
 <details>
 <summary><strong>Gemini CLI</strong></summary>
 
-Run `/quota_status` and check the Gemini CLI live probe rows.
+When the TUI plugin is installed, run `/quota_status` and check the Gemini CLI live probe rows.
 
 | Symptom | Fix |
 | --- | --- |
@@ -716,14 +716,14 @@ Run `/quota_status` and check the Gemini CLI live probe rows.
 <details>
 <summary><strong>OpenCode Go</strong></summary>
 
-Run `/quota_status` and check the `opencode_go` section.
+When the TUI plugin is installed, run `/quota_status` and check the `opencode_go` section.
 
 | Symptom | Fix |
 | --- | --- |
-| Config not detected | Set both `OPENCODE_GO_WORKSPACE_ID` and `OPENCODE_GO_AUTH_COOKIE`, then rerun `/quota_status`. |
+| Config not detected | Set both `OPENCODE_GO_WORKSPACE_ID` and `OPENCODE_GO_AUTH_COOKIE`, then rerun `/quota_status` when the TUI plugin is installed. |
 | Incomplete config | `workspaceId` and `authCookie` must come from the same source. |
 | Scrape returns no data | Refresh the browser `auth` cookie from `opencode.ai`. |
-| Selected window missing | Check `/quota_status` for `selected_windows` and `live_fetch_error`; remove unavailable windows from `opencodeGoWindows` in `opencode-quota/quota-toast.json` or refresh the dashboard cookie. |
+| Selected window missing | When the TUI plugin is installed, check `/quota_status` for `selected_windows` and `live_fetch_error`; remove unavailable windows from `opencodeGoWindows` in `opencode-quota/quota-toast.json` or refresh the dashboard cookie. |
 | Dashboard format changed | This integration scrapes the dashboard, so it can break if the dashboard markup changes. |
 
 </details>
@@ -731,14 +731,14 @@ Run `/quota_status` and check the `opencode_go` section.
 <details>
 <summary><strong>Token reports</strong></summary>
 
-Run `/quota_status` and check pricing snapshot health plus OpenCode database paths.
+When the TUI plugin is installed, run `/quota_status` and check pricing snapshot health plus OpenCode database paths.
 
 | Symptom | Fix |
 | --- | --- |
 | `/tokens_*` is empty | Start OpenCode once so it creates `opencode.db`, then run a session with model usage. |
-| Pricing looks stale | Run `/pricing_refresh`. |
+| Pricing looks stale | Run `/pricing_refresh` when the TUI plugin is installed. |
 | Runtime pricing does not change output | Check `pricingSnapshot.source` in `opencode-quota/quota-toast.json`; `bundled` keeps packaged pricing active. |
-| Cursor model has unknown pricing | Run `/pricing_refresh`; Cursor `auto` and `composer*` use bundled deterministic pricing. |
+| Cursor model has unknown pricing | Run `/pricing_refresh` when the TUI plugin is installed; Cursor `auto` and `composer*` use bundled deterministic pricing. |
 
 </details>
 

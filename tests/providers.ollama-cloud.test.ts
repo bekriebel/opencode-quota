@@ -126,6 +126,56 @@ describe("ollama-cloud provider", () => {
     ]);
   });
 
+  it("returns only a session entry when the scraper returns session usage", async () => {
+    mockConfigConfigured();
+    mocks.queryOllamaCloudQuota.mockResolvedValueOnce({
+      success: true,
+      session: {
+        usagePercent: 25,
+        percentRemaining: 75,
+        resetTimeIso: "2026-06-14T10:00:00.000Z",
+      },
+    });
+
+    const out = await runProviderFetch();
+
+    expectAttemptedWithNoErrors(out);
+    expect(out.entries).toEqual([
+      {
+        name: "Ollama Cloud Session",
+        group: "Ollama Cloud",
+        label: "Session:",
+        percentRemaining: 75,
+        resetTimeIso: "2026-06-14T10:00:00.000Z",
+      },
+    ]);
+  });
+
+  it("returns only a weekly entry when the scraper returns weekly usage", async () => {
+    mockConfigConfigured();
+    mocks.queryOllamaCloudQuota.mockResolvedValueOnce({
+      success: true,
+      weekly: {
+        usagePercent: 40,
+        percentRemaining: 60,
+        resetTimeIso: "2026-06-21T10:00:00.000Z",
+      },
+    });
+
+    const out = await runProviderFetch();
+
+    expectAttemptedWithNoErrors(out);
+    expect(out.entries).toEqual([
+      {
+        name: "Ollama Cloud Weekly",
+        group: "Ollama Cloud",
+        label: "Weekly:",
+        percentRemaining: 60,
+        resetTimeIso: "2026-06-21T10:00:00.000Z",
+      },
+    ]);
+  });
+
   it("passes user-configured requestTimeoutMs to the scraper", async () => {
     mockConfigConfigured("cookie");
     mocks.queryOllamaCloudQuota.mockResolvedValueOnce({
