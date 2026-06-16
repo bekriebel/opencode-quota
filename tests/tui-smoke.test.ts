@@ -665,7 +665,9 @@ describe("tui plugin smoke", () => {
     const collapsedHeader = collapsed.props.children[0];
     expect(collapsedHeader.props.children[0].props.children.props.children).toBe("▶ Quota");
     expect(collapsedHeader.props.children[1].props.children).toEqual([" (", 2, " providers)"]);
-    expect(collapsed.props.children[1].props.children).toEqual([]);
+    expect(
+      collapsed.props.children[1].props.children.map((line: any) => line.props.children),
+    ).toEqual(["Copilot 5h 82%"]);
 
     collapsedHeader.props.children[0].props.onMouseDown();
 

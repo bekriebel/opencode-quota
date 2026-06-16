@@ -238,7 +238,7 @@ describe("quota surface parity regressions", () => {
     });
 
     expect(panel.status).toBe("ready");
-    expect(panel.lines.join("\n")).toContain("64% left");
+    expect(panel.lines.join("\n")).toContain("64%");
     expect(syntheticProvider.fetch).toHaveBeenCalledTimes(1);
   });
 
@@ -444,8 +444,8 @@ describe("quota surface parity regressions", () => {
 
     expect(panel.status).toBe("ready");
     const sidebarOutput = panel.lines.join("\n");
-    expect(sidebarOutput).toContain("82% left");
-    expect(sidebarOutput).not.toContain("17% left");
+    expect(sidebarOutput).toContain("82%");
+    expect(sidebarOutput).not.toContain("17%");
     expect(openaiProvider.fetch).toHaveBeenCalledTimes(1);
     expect(syntheticProvider.fetch).not.toHaveBeenCalled();
   });
@@ -533,7 +533,8 @@ describe("quota surface parity regressions", () => {
     });
 
     expect(panel.status).toBe("ready");
-    const sidebarOutput = panel.lines.join("\n");
+    expect(panel.linesExpanded).toBeDefined();
+    const sidebarOutput = panel.linesExpanded!.join("\n");
     expect(sidebarOutput).toContain("44% left");
     expect(sidebarOutput).toContain("8% left");
     expect(syntheticProvider.fetch).toHaveBeenCalledTimes(1);
@@ -621,8 +622,8 @@ describe("quota surface parity regressions", () => {
 
     expect(panel.status).toBe("ready");
     const sidebarOutput = panel.lines.join("\n");
-    expect(sidebarOutput).toContain("40% left");
-    expect(sidebarOutput).not.toContain("95% left");
+    expect(sidebarOutput).toContain("40%");
+    expect(sidebarOutput).not.toContain("95%");
     expect(openaiProvider.fetch).toHaveBeenCalledTimes(1);
   });
 });

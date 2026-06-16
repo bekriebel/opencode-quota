@@ -1,4 +1,5 @@
 import type { AggregateResult, SessionTreeNode, TokenBuckets } from "./quota-stats.js";
+import { abbreviateDisplayedModelName } from "./format-utils.js";
 import type { WidthMode } from "./markdown-table.js";
 import { renderMarkdownReport, type ReportDocument, type ReportSection } from "./report-document.js";
 import { emptyTokenBuckets, totalTokenBuckets } from "./token-buckets.js";
@@ -117,12 +118,13 @@ function middleEllipsize(text: string, maxWidth: number): string {
 }
 
 function formatSourceModelId(modelID: string, maxWidth?: number): string {
-  const normalized = normalizeSourceModelId(modelID);
-  return maxWidth ? middleEllipsize(normalized, maxWidth) : normalized;
+  const displayed = abbreviateDisplayedModelName(normalizeSourceModelId(modelID));
+  return maxWidth ? middleEllipsize(displayed, maxWidth) : displayed;
 }
 
 function formatDiagnosticSourceModelId(modelID: string, maxWidth?: number): string {
-  return maxWidth ? middleEllipsize(normalizeSourceModelId(modelID), maxWidth) : modelID;
+  if (!maxWidth) return abbreviateDisplayedModelName(modelID);
+  return middleEllipsize(abbreviateDisplayedModelName(normalizeSourceModelId(modelID)), maxWidth);
 }
 
 function sourceSortKey(source: string): number {

@@ -132,6 +132,66 @@ describe("formatQuotaStatsReport (markdown)", () => {
     expect(compact).not.toContain("C.Write");
   });
 
+  it("abbreviates antigravity model names before width enforcement", () => {
+    const sourceModelID = "antigravity-gemini-3-pro-preview";
+    const r = makeEmptyResult({
+      totals: {
+        priced: { input: 10, output: 20, reasoning: 0, cache_read: 0, cache_write: 0 },
+        unknown: { input: 5, output: 6, reasoning: 0, cache_read: 0, cache_write: 0 },
+        unpriced: { input: 7, output: 8, reasoning: 0, cache_read: 0, cache_write: 0 },
+        costUsd: 0.01,
+        messageCount: 3,
+        sessionCount: 1,
+      },
+      bySourceModel: [
+        {
+          sourceProviderID: "google-antigravity",
+          sourceModelID,
+          tokens: { input: 10, output: 20, reasoning: 0, cache_read: 0, cache_write: 0 },
+          costUsd: 0.01,
+          messageCount: 1,
+        },
+      ],
+      unpriced: [
+        {
+          key: {
+            sourceProviderID: "google-antigravity",
+            sourceModelID,
+            mappedProvider: "google",
+            mappedModel: "gemini-3-pro-preview",
+            reason: "snapshot missing model",
+          },
+          tokens: { input: 7, output: 8, reasoning: 0, cache_read: 0, cache_write: 0 },
+          messageCount: 1,
+        },
+      ],
+      unknown: [
+        {
+          key: {
+            sourceProviderID: "google-antigravity",
+            sourceModelID,
+            mappedProvider: "google",
+            mappedModel: "gemini-3-pro-preview",
+          },
+          tokens: { input: 5, output: 6, reasoning: 0, cache_read: 0, cache_write: 0 },
+          messageCount: 1,
+        },
+      ],
+    });
+
+    const out = formatQuotaStatsReport({
+      title: "Tokens used (Last 24 Hours) (/tokens_daily)",
+      result: r,
+      tableOptions: {
+        compactHeaders: true,
+        modelNameMaxWidth: 20,
+      },
+    });
+
+    expect(out).not.toContain("antigravity");
+    expect(out).toContain("agy-gemini…o-preview");
+  });
+
   it("omits Reasoning column when all reasoning is zero", () => {
     const r = makeEmptyResult({
       totals: {

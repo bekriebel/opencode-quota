@@ -156,7 +156,7 @@ describe("/tokens_session_all command", () => {
         reportKind: "session_tree",
         tableOptions: {
           compactHeaders: true,
-          modelNameMaxWidth: 34,
+          modelNameMaxWidth: 20,
         },
         sessionTree: {
           rootSessionID: "ses_parent",
@@ -201,7 +201,7 @@ describe("/tokens_session_all command", () => {
         reportKind: "session",
         tableOptions: {
           compactHeaders: true,
-          modelNameMaxWidth: 34,
+          modelNameMaxWidth: 20,
         },
       }),
     );

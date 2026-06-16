@@ -361,8 +361,7 @@ function SidebarContentView(props: { api: TuiPluginApi; sessionID: string }) {
 
   const displayLines = () => {
     if (!hasDetailLines()) return lines();
-    if (collapsed()) return [];
-    return getSidebarPanelLinesExpanded(panel());
+    return collapsed() ? lines() : getSidebarPanelLinesExpanded(panel());
   };
 
   const toggleIcon = () => (collapsed() ? "▶" : "▼");

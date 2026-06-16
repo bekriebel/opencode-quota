@@ -1742,7 +1742,8 @@ describe("tui runtime helpers", () => {
       data: singleWindowData,
       allWindowsData,
     });
-    buildSidebarQuotaPanelLines.mockReturnValue(["[Copilot]", "5h line", "Weekly line"]);
+    buildCompactQuotaStatusLine.mockReturnValue("Copilot 50%");
+    buildSidebarQuotaPanelLines.mockReturnValueOnce(["[Copilot]", "5h line", "Weekly line"]);
 
     const surfaces = await loadTuiSessionQuotaSurfaces({
       api: {
@@ -1756,14 +1757,16 @@ describe("tui runtime helpers", () => {
       sessionID: "session-sidebar-override",
     });
 
-    // sidebar uses allWindowsData (per sidebar.formatStyle=allWindows)
-    expect(buildSidebarQuotaPanelLines).toHaveBeenCalledWith({
+    // sidebar keeps compact text collapsed and all-windows lines expanded.
+    expect(buildSidebarQuotaPanelLines).toHaveBeenCalledTimes(1);
+    expect(buildSidebarQuotaPanelLines).toHaveBeenNthCalledWith(1, {
       data: allWindowsData,
       config: expect.objectContaining({ formatStyle: "allWindows" }),
     });
     expect(surfaces.sidebar).toEqual({
       status: "ready",
-      lines: ["[Copilot]", "5h line", "Weekly line"],
+      lines: ["Copilot 50%"],
+      linesExpanded: ["[Copilot]", "5h line", "Weekly line"],
     });
     // collect still used root formatStyle=singleWindow
     expect(collectQuotaRenderData).toHaveBeenCalledWith(

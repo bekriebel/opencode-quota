@@ -14,7 +14,7 @@ import { collectConcreteEnabledProviderIds, collectQuotaRenderData } from "./quo
 import { resolveQuotaFormatStyle } from "./quota-format-style.js";
 import { buildCompactQuotaStatusLine } from "./tui-compact-format.js";
 import { hasNativeProviderQuotaClient } from "./tui-native-provider-quota.js";
-import { buildSidebarQuotaPanelLines } from "./tui-sidebar-format.js";
+import { buildSidebarQuotaPanelLines, TUI_SIDEBAR_MAX_WIDTH } from "./tui-sidebar-format.js";
 import {
   formatMaintainerAnnouncementHomeCountLine,
   getMaintainerAnnouncementsSummary,
@@ -235,22 +235,36 @@ function buildSidebarPanelFromData(params: {
     };
   }
 
+  const hasExpandedDetail = Boolean(params.result.allWindowsData);
+  const compactData = params.result.singleWindowData ?? params.result.data;
   const primaryData =
     params.formatStyle === "allWindows" && params.result.allWindowsData
-      ? params.result.allWindowsData
+      ? compactData
       : params.formatStyle === "singleWindow" && params.result.singleWindowData !== undefined
         ? params.result.singleWindowData
         : params.result.data;
+  const primaryFormatStyle =
+    params.formatStyle === "allWindows" && params.result.allWindowsData
+      ? "singleWindow"
+      : params.formatStyle;
 
   const lines = primaryData
-    ? buildSidebarQuotaPanelLines({
-        data: primaryData,
-        config: { ...params.runtime.config, formatStyle: params.formatStyle },
-      })
+    ? hasExpandedDetail
+      ? [
+          buildCompactQuotaStatusLine({
+            data: primaryData,
+            percentDisplayMode: params.runtime.config.percentDisplayMode,
+            maxWidth: TUI_SIDEBAR_MAX_WIDTH,
+          }),
+        ].filter((line): line is string => Boolean(line))
+      : buildSidebarQuotaPanelLines({
+          data: primaryData,
+          config: { ...params.runtime.config, formatStyle: primaryFormatStyle },
+        })
     : [];
 
   let linesExpanded: string[] | undefined;
-  if (params.result.allWindowsData && params.formatStyle !== "allWindows") {
+  if (params.result.allWindowsData) {
     linesExpanded = buildSidebarQuotaPanelLines({
       data: params.result.allWindowsData,
       config: { ...params.runtime.config, formatStyle: "allWindows" },
