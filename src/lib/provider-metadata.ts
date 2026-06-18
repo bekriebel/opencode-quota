@@ -57,7 +57,7 @@ export const QUOTA_PROVIDER_LABELS: Readonly<Record<string, string>> = {
   copilot: "Copilot",
   "google-antigravity": "Google",
   "google-gemini-cli": "Gemini CLI",
-  "google-agy": "Google Agy",
+  "google-agy": "Google AGY",
   synthetic: "Synthetic",
   chutes: "Chutes",
   cursor: "Cursor",

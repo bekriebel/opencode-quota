@@ -43,7 +43,7 @@ export const googleAgyProvider: QuotaProvider = {
     }
 
     if (!result.success) {
-      return attemptedErrorResult("Google Agy", result.error);
+      return attemptedErrorResult("Google AGY", result.error);
     }
 
     const groupedBuckets = new Map<string, typeof result.buckets[0]>();
@@ -87,7 +87,7 @@ export const googleAgyProvider: QuotaProvider = {
 
       return {
         name: `${bucket.displayName} (${emailLabel})`,
-        group: "Google Agy",
+        group: "Google AGY",
         label: `${bucket.displayName}:`,
         ...(right ? { right } : {}),
         percentRemaining: bucket.percentRemaining,
@@ -96,7 +96,7 @@ export const googleAgyProvider: QuotaProvider = {
     });
 
     return attemptedResult(entries, formatGoogleAccountErrors(result.errors, "domainHint"), {
-      singleWindowDisplayName: "Google Agy",
+      singleWindowDisplayName: "Google AGY",
       singleWindowShowRight: true,
     });
   },

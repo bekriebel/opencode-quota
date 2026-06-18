@@ -13,7 +13,7 @@ vi.mock("../src/lib/google-agy.js", () => ({
 }));
 
 describe("google agy provider", () => {
-  it("preserves the Google Agy quota timeout default unless requestTimeoutMs is user-configured", async () => {
+  it("preserves the Google AGY quota timeout default unless requestTimeoutMs is user-configured", async () => {
     const { queryGoogleAgyQuota } = await import("../src/lib/google-agy.js");
     (queryGoogleAgyQuota as any).mockResolvedValue(null);
 
@@ -27,7 +27,7 @@ describe("google agy provider", () => {
     expect(queryGoogleAgyQuota).toHaveBeenLastCalledWith({}, { requestTimeoutMs: 12000 });
   });
 
-  it("returns attempted:false when Google Agy auth is not configured", async () => {
+  it("returns attempted:false when Google AGY auth is not configured", async () => {
     const { queryGoogleAgyQuota } = await import("../src/lib/google-agy.js");
     (queryGoogleAgyQuota as any).mockResolvedValueOnce(null);
 
@@ -58,7 +58,7 @@ describe("google agy provider", () => {
     expect(out.entries).toEqual([
       {
         name: "Gemini Models (ali..example)",
-        group: "Google Agy",
+        group: "Google AGY",
         label: "Gemini Models:",
         right: "1,234 left",
         percentRemaining: 64,
@@ -67,12 +67,12 @@ describe("google agy provider", () => {
     ]);
     expect(out.errors).toEqual([{ label: "bob..example", message: "Unauthorized" }]);
     expect(out.presentation).toEqual({
-      singleWindowDisplayName: "Google Agy",
+      singleWindowDisplayName: "Google AGY",
       singleWindowShowRight: true,
     });
   });
 
-  it("maps aggregated Google Agy quality tiers without changing provider presentation", async () => {
+  it("maps aggregated Google AGY quality tiers without changing provider presentation", async () => {
     const { queryGoogleAgyQuota } = await import("../src/lib/google-agy.js");
     (queryGoogleAgyQuota as any).mockResolvedValueOnce({
       success: true,
@@ -94,7 +94,7 @@ describe("google agy provider", () => {
     expect(out.entries).toEqual([
       {
         name: "Gemini Models (ali..example)",
-        group: "Google Agy",
+        group: "Google AGY",
         label: "Gemini Models:",
         right: "50 left TOKENS",
         percentRemaining: 20,
@@ -102,7 +102,7 @@ describe("google agy provider", () => {
       },
     ]);
     expect(out.presentation).toEqual({
-      singleWindowDisplayName: "Google Agy",
+      singleWindowDisplayName: "Google AGY",
       singleWindowShowRight: true,
     });
   });
@@ -143,10 +143,10 @@ describe("google agy provider", () => {
     });
 
     const out = await googleAgyProvider.fetch({ client: {} } as any);
-    expectAttemptedWithErrorLabel(out, "Google Agy");
+    expectAttemptedWithErrorLabel(out, "Google AGY");
   });
 
-  it("is available only when the Google Agy runtime is configured", async () => {
+  it("is available only when the Google AGY runtime is configured", async () => {
     const { hasAgyQuotaRuntimeAvailable } = await import("../src/lib/google-agy.js");
     (hasAgyQuotaRuntimeAvailable as any).mockResolvedValueOnce(true);
     await expect(googleAgyProvider.isAvailable({ client: {} } as any)).resolves.toBe(true);
@@ -155,7 +155,7 @@ describe("google agy provider", () => {
     await expect(googleAgyProvider.isAvailable({ client: {} } as any)).resolves.toBe(false);
   });
 
-  it("matches Google Agy current model ids", () => {
+  it("matches Google AGY current model ids", () => {
     expect(googleAgyProvider.matchesCurrentModel?.("google-agy/gpt-4")).toBe(true);
     expect(googleAgyProvider.matchesCurrentModel?.("opencode-agy-auth/gpt-4")).toBe(true);
     expect(googleAgyProvider.matchesCurrentModel?.("google-agy-auth/gpt-4")).toBe(true);

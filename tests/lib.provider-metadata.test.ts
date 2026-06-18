@@ -326,7 +326,7 @@ describe("provider-metadata", () => {
     expect(getQuotaProviderDisplayLabel("anthropic")).toBe("Anthropic");
     expect(getQuotaProviderDisplayLabel("google-antigravity")).toBe("Google");
     expect(getQuotaProviderDisplayLabel("gemini-cli")).toBe("Gemini CLI");
-    expect(getQuotaProviderDisplayLabel("google-agy")).toBe("Google Agy");
+    expect(getQuotaProviderDisplayLabel("google-agy")).toBe("Google AGY");
     expect(getQuotaProviderDisplayLabel("cursor")).toBe("Cursor");
     expect(getQuotaProviderDisplayLabel("alibaba-coding-plan")).toBe("Alibaba Coding Plan");
     expect(getQuotaProviderDisplayLabel("synthetic")).toBe("Synthetic");

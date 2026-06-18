@@ -1559,7 +1559,7 @@ export async function buildQuotaStatusReport(params: {
   appendProviderCompactLiveProbeRows(geminiCliRows, "google-gemini-cli", params.providerLiveProbes);
   sections.push(createKvSection("google_gemini_cli", "google_gemini_cli:", geminiCliRows));
 
-  // Google Agy
+  // Google AGY
   const agyAuthPresence = await inspectAgyAuthPresence(params.agyClient);
   const agyCompanionPresence = await inspectAgyCompanionPresence();
   const agyRows: ReportKvRow[] = [

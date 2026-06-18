@@ -228,7 +228,7 @@ export async function inspectAgyAuthPresence(client?: ConfigClient): Promise<Agy
       ...(sourceKey ? { sourceKey } : {}),
       accountCount,
       validAccountCount: 0,
-      error: "Google Agy OAuth auth is missing a refresh token or project id",
+      error: "Google AGY OAuth auth is missing a refresh token or project id",
     };
   }
 
@@ -398,9 +398,9 @@ async function retrieveGoogleAgyQuota(
 
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
-      throw new Error(`Google Agy quota auth error: ${response.status}`);
+      throw new Error(`Google AGY quota auth error: ${response.status}`);
     }
-    throw new Error(`Google Agy quota API error: ${response.status}`);
+    throw new Error(`Google AGY quota API error: ${response.status}`);
   }
 
   return response.json() as Promise<RetrieveUserQuotaResponse>;
@@ -603,7 +603,7 @@ export async function queryGoogleAgyQuota(
   if (credentials.state !== "configured") {
     return {
       success: false,
-      error: credentials.error || "Google Agy companion auth plugin not found",
+      error: credentials.error || "Google AGY companion auth plugin not found",
     };
   }
 
@@ -628,7 +628,7 @@ export async function queryGoogleAgyQuota(
   if (allBuckets.length === 0 && errors.length === 0) {
     return {
       success: false,
-      error: "No Google Agy quota data available",
+      error: "No Google AGY quota data available",
     };
   }
 

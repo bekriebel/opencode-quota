@@ -21,7 +21,7 @@ const COMPANION_DIRECT_CANDIDATE_PATHS = [
   ["dist", "src", "constants.js"],
   ["dist", "index.js"],
 ] as const;
-const COMPANION_MISSING_ERROR = `Install ${COMPANION_PACKAGE_NAME} separately to enable Google Agy quota`;
+const COMPANION_MISSING_ERROR = `Install ${COMPANION_PACKAGE_NAME} separately to enable Google AGY quota`;
 const COMPANION_INVALID_ERROR = `Installed ${COMPANION_PACKAGE_NAME} package is incompatible`;
 
 export type AgyCompanionPresence =
