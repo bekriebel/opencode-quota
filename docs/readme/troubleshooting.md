@@ -117,7 +117,7 @@ Run `/quota_status` and check the Alibaba auth, resolved tier, state-file path, 
 </details>
 
 <details>
-<summary><strong>MiniMax, Kimi, Chutes AI, Synthetic, Z.ai, Zhipu, NanoGPT, and DeepSeek</strong></summary>
+<summary><strong>MiniMax, Kimi, Chutes AI, Synthetic, Z.ai, Zhipu, NanoGPT, DeepSeek, and Neuralwatt</strong></summary>
 
 These providers use trusted env vars, trusted user/global OpenCode config, or native OpenCode auth. Run `/quota_status` and check the provider-specific API-key diagnostics.
 
@@ -132,6 +132,7 @@ These providers use trusted env vars, trusted user/global OpenCode config, or na
 | Zhipu Coding Plan | Use `ZHIPU_API_KEY` or `ZHIPU_CODING_PLAN_API_KEY`; malformed fallback auth is surfaced as an auth error. |
 | NanoGPT | Use `NANOGPT_API_KEY`, `NANO_GPT_API_KEY`, trusted user/global config, or OpenCode auth. |
 | DeepSeek | Use `DEEPSEEK_API_KEY`, trusted user/global config under `provider.deepseek.options.apiKey`, or OpenCode auth. This provider shows balance only because DeepSeek does not expose a quota reset window. |
+| Neuralwatt | Use `NEURALWATT_API_KEY`, trusted user/global config under `provider.neuralwatt.options.apiKey` (OpenAI-compatible; set `baseURL` to `https://api.neuralwatt.com/v1`), or OpenCode auth. Shows subscription kWh allowance plus USD credit balance from `GET https://api.neuralwatt.com/v1/quota`. |
 
 For security, repo-local `opencode.json` / `opencode.jsonc` is ignored for provider secrets in these integrations. Put secrets in environment variables or trusted user/global config. OpenCode auth fallbacks for API-key providers require `{ "type": "api", "key": "..." }` entries.
 

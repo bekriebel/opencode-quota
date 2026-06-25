@@ -138,6 +138,35 @@ Or put the key in trusted user/global OpenCode config, not repo-local config:
 If you use manual provider selection, include `deepseek` in `enabledProviders`.
 
 
+<a id="neuralwatt"></a>
+### Neuralwatt
+
+Neuralwatt shows the subscription kWh allowance (when active) and USD credit balance from `GET https://api.neuralwatt.com/v1/quota`. Neuralwatt is an OpenAI-compatible API; set `baseURL` to `https://api.neuralwatt.com/v1`.
+
+Use one of these trusted API-key sources:
+
+```bash
+export NEURALWATT_API_KEY="sk-your-api-key"
+```
+
+Or put the key in trusted user/global OpenCode config, not repo-local config:
+
+```jsonc
+{
+  "provider": {
+    "neuralwatt": {
+      "options": {
+        "baseURL": "https://api.neuralwatt.com/v1",
+        "apiKey": "{env:NEURALWATT_API_KEY}",
+      },
+    },
+  },
+}
+```
+
+If you use manual provider selection, include `neuralwatt` in `enabledProviders`.
+
+
 <a id="ollama-cloud"></a>
 ### Ollama Cloud
 

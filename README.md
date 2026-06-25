@@ -124,6 +124,7 @@ Most providers work automatically. If a provider has a “Needs setup” link, o
 | Zhipu Coding Plan | OpenCode config | Remote API | Usage/quota |
 | NanoGPT | API key/config | Remote API | Usage + balance |
 | DeepSeek | API key/config | Remote API | Balance/status |
+| Neuralwatt | API key/config | Remote API | Subscription kWh + credits |
 | Ollama Cloud | [Needs setup](docs/readme/providers.md#ollama-cloud) | Dashboard scraping | Dashboard usage |
 | OpenCode Go | [Needs setup](docs/readme/providers.md#opencode-go) | Dashboard scraping | Dashboard usage |
 
