@@ -56,7 +56,7 @@ describe("package manifest compatibility", () => {
       types: "./dist/index.d.ts",
     });
     expect(pkg.exports?.["./tui"]).toEqual({
-      default: "./dist/tui.tsx",
+      default: "./dist/tui.js",
       types: "./dist/tui.d.ts",
     });
   });
@@ -84,10 +84,11 @@ describe("package manifest compatibility", () => {
     );
   });
 
-  it("smoke-tests the TUI package export by resolving and reading it, not importing raw TSX", () => {
+  it("smoke-tests the compiled TUI package export without importing the OpenTUI runtime", () => {
     expect(ciWorkflow).toContain("@slkiser/opencode-quota/tui");
     expect(ciWorkflow).toContain('import.meta.resolve("@slkiser/opencode-quota/tui")');
     expect(ciWorkflow).toContain('readFile(tuiExportPath, "utf8")');
+    expect(ciWorkflow).toContain("dist\\\\/tui\\\\.js");
     expect(ciWorkflow).not.toContain('await import("@slkiser/opencode-quota/tui")');
   });
 });
