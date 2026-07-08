@@ -98,7 +98,7 @@ describe("tui-runtime linesExpanded", () => {
     rmSync(tempDir, { recursive: true, force: true });
   });
 
-  it("omits linesExpanded when sidebar format is singleWindow", async () => {
+  it("uses single-window lines plus expanded detail when sidebar format is singleWindow", async () => {
     writeFileSync(
       join(worktreeDir, "opencode.json"),
       JSON.stringify({
@@ -132,7 +132,9 @@ describe("tui-runtime linesExpanded", () => {
       active: [{ id: "copilot" }, { id: "openai" }],
     });
 
-    buildSidebarQuotaPanelLinesMock.mockReturnValueOnce(["Single-window sidebar"]);
+    buildSidebarQuotaPanelLinesMock
+      .mockReturnValueOnce(["Single-window sidebar"])
+      .mockReturnValueOnce(["[Copilot]", "5h window 18%", "Daily window 42%"]);
 
     const panel = await loadSidebarPanel({
       api: {
@@ -148,17 +150,21 @@ describe("tui-runtime linesExpanded", () => {
 
     expect(panel.status).toBe("ready");
     expect(panel.lines).toEqual(["Single-window sidebar"]);
-    expect(panel.linesExpanded).toBeUndefined();
+    expect(panel.linesExpanded).toEqual(["[Copilot]", "5h window 18%", "Daily window 42%"]);
     expect(panel.providerCount).toBe(2);
 
     expect(collectQuotaRenderDataMock).toHaveBeenCalledWith(
       expect.objectContaining({ includeAllWindowsData: true }),
     );
 
-    expect(buildSidebarQuotaPanelLinesMock).toHaveBeenCalledTimes(1);
+    expect(buildSidebarQuotaPanelLinesMock).toHaveBeenCalledTimes(2);
     expect(buildSidebarQuotaPanelLinesMock).toHaveBeenNthCalledWith(1, {
       data,
       config: expect.objectContaining({ formatStyle: "singleWindow" }),
+    });
+    expect(buildSidebarQuotaPanelLinesMock).toHaveBeenNthCalledWith(2, {
+      data: allWindowsData,
+      config: expect.objectContaining({ formatStyle: "allWindows" }),
     });
   });
 

@@ -263,13 +263,16 @@ function buildSidebarPanelFromData(params: {
         })
     : [];
 
-  let linesExpanded: string[] | undefined;
-  if (params.formatStyle === "allWindows" && params.result.allWindowsData) {
-    linesExpanded = buildSidebarQuotaPanelLines({
-      data: params.result.allWindowsData,
-      config: { ...params.runtime.config, formatStyle: "allWindows" },
-    });
-  }
+  const expandedLines = params.result.allWindowsData
+    ? buildSidebarQuotaPanelLines({
+        data: params.result.allWindowsData,
+        config: { ...params.runtime.config, formatStyle: "allWindows" },
+      })
+    : [];
+  const linesExpanded =
+    expandedLines.length > 0 && expandedLines.join("\n") !== lines.join("\n")
+      ? expandedLines
+      : undefined;
 
   const providerCount = params.result.active.length;
 
